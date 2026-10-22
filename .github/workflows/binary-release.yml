@@ -1,0 +1,48 @@
+name: Binary Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: binary-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the CLI
+        run: pnpm --filter @monet/cli build
+
+      - name: Build the standalone binaries
+        run: pnpm --filter @monet/cli build:binary
+
+      - name: Copy the skill template next to the binaries
+        run: |
+          # The standalone binary looks for the authored skill template next
+          # to its own executable.
+          cp -R MonetSkill packages/cli/dist/binaries/
+
+      - name: Publish the release
+        uses: wevm/incur/release@v1
+        with:
+          files: |
+            packages/cli/dist/binaries/*

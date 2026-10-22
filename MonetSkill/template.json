@@ -1,0 +1,11 @@
+{
+  "name": "monet",
+  "version": "0.1.0",
+  "description": "Monet is a local-first Markdown vault for macOS with a 3D link graph. Use this skill to read, create, search and connect notes in a Monet vault from the terminal or through the Monet MCP server.",
+  "defaultLocale": "en",
+  "locales": {
+    "en": "SKILL.md",
+    "pt-BR": "SKILL.pt-BR.md",
+    "es": "SKILL.es.md"
+  }
+}

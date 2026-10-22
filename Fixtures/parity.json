@@ -1,0 +1,20 @@
+{
+  "note": {
+    "title": "Parity Fixture",
+    "aliases": ["Parity", "The Fixture"],
+    "tags": ["fixture", "area/product", "inline", "nested/tag", "with-dash"]
+  },
+  "links": [
+    { "target": "Simple Link", "display": null, "anchor": null, "isEmbed": false },
+    { "target": "Target", "display": "shown text", "anchor": null, "isEmbed": false },
+    { "target": "Target", "display": null, "anchor": "Section", "isEmbed": false },
+    { "target": "Embedded Note", "display": null, "anchor": null, "isEmbed": true },
+    { "target": "Embedded Note", "display": null, "anchor": "Part", "isEmbed": true },
+    { "target": "Missing Note", "display": null, "anchor": null, "isEmbed": false }
+  ],
+  "headings": [
+    { "title": "Parity Fixture", "level": 1 },
+    { "title": "Section", "level": 2 },
+    { "title": "Deep heading", "level": 3 }
+  ]
+}

@@ -1,0 +1,6 @@
+packages:
+  - 'packages/*'
+
+# esbuild ships a platform binary; its install script only links it.
+allowBuilds:
+  esbuild: true

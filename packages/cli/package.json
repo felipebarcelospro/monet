@@ -1,0 +1,49 @@
+{
+  "name": "@monet/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "private": false,
+  "description": "Monet \u2014 command line access to a Monet Markdown vault.",
+  "license": "MIT",
+  "bin": {
+    "monet": "./dist/bin.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "MonetSkill"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "postbuild": "chmod +x dist/bin.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "bun run src/bin.ts",
+    "seed": "bun run scripts/seed.ts",
+    "build:binary": "incur build ./dist/bin.js --installer --name monet",
+    "prepack": "node scripts/copy-skill.mjs"
+  },
+  "dependencies": {
+    "incur": "^0.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/monet-app/monet.git"
+  }
+}
