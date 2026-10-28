@@ -1,13 +1,13 @@
 ---
 name: monet
-description: Monet é um cofre Markdown local para macOS com grafo 3D de links. Use esta skill para ler, criar, buscar e conectar notas em um cofre Monet pelo terminal ou pelo servidor MCP do Monet.
+description: Monet é um cofre Markdown local com grafo interativo de links. Use esta skill para ler, criar, buscar e conectar notas em um cofre Monet pelo terminal ou pelo servidor MCP do Monet.
 ---
 
 # Monet
 
 Monet é um cofre de conhecimento em Markdown. As notas são arquivos `.md`
 comuns em uma pasta, os links são `[[wikilinks]]`, e a mesma pasta pode ser
-aberta pelo app macOS e pela CLI `monet` sem nenhum estado duplicado.
+aberta pelo app desktop e pela CLI `monet` sem nenhum estado duplicado.
 
 Esta skill é instalada junto com as skills geradas `monet-<command>`, que documentam cada comando da CLI em detalhe.
 
@@ -41,7 +41,7 @@ A ordem de resolução é: `--vault`, `MONET_VAULT`, o cofre configurado e o
 diretório atual. Quando o cofre não estiver óbvio, rode `monet vault current`
 antes de ler ou escrever — nunca adivinhe um caminho.
 
-Para abrir o cofre no app macOS:
+Para abrir o cofre no app desktop:
 
 ```sh
 monet open
@@ -106,8 +106,9 @@ O formato JSON é:
 }
 ```
 
-O app macOS desenha exatamente este grafo em 3D, com o mesmo layout dirigido
-por forças, então um id de nó da CLI é o mesmo nó que você vê no app.
+O app desktop desenha exatamente este grafo com o mesmo layout dirigido por
+forças e determinístico, então um id de nó da CLI é o mesmo nó que você vê no
+app.
 
 ## Etiquetas
 

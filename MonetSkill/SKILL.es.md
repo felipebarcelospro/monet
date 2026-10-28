@@ -1,13 +1,13 @@
 ---
 name: monet
-description: Monet es una bóveda Markdown local para macOS con un grafo 3D de enlaces. Usa esta skill para leer, crear, buscar y conectar notas en una bóveda de Monet desde la terminal o mediante el servidor MCP de Monet.
+description: Monet es una bóveda Markdown local con un grafo interactivo de enlaces. Usa esta skill para leer, crear, buscar y conectar notas en una bóveda de Monet desde la terminal o mediante el servidor MCP de Monet.
 ---
 
 # Monet
 
 Monet es una bóveda de conocimiento en Markdown. Las notas son archivos `.md`
 comunes en una carpeta, los enlaces son `[[wikilinks]]`, y la misma carpeta
-puede abrirse con la app de macOS y con la CLI `monet` sin ningún estado
+puede abrirse con la app de escritorio y con la CLI `monet` sin ningún estado
 duplicado.
 
 Esta skill se instala junto con las skills generadas `monet-<command>`, que documentan cada comando de la CLI en detalle.
@@ -42,7 +42,7 @@ El orden de resolución es: `--vault`, `MONET_VAULT`, la bóveda configurada y
 el directorio actual. Cuando la bóveda no sea obvia, ejecuta
 `monet vault current` antes de leer o escribir — nunca adivines una ruta.
 
-Para abrir la bóveda en la app de macOS:
+Para abrir la bóveda en la app de escritorio:
 
 ```sh
 monet open
@@ -107,7 +107,7 @@ La forma del JSON es:
 }
 ```
 
-La app de macOS dibuja exactamente este grafo en 3D, con la misma
+La app de escritorio dibuja exactamente este grafo con la misma
 distribución dirigida por fuerzas, así que un id de nodo de la CLI es el
 mismo nodo que ves en la app.
 

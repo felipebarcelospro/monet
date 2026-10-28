@@ -1,12 +1,12 @@
 ---
 name: monet
-description: Monet is a local-first Markdown vault for macOS with a 3D link graph. Use this skill to read, create, search and connect notes in a Monet vault from the terminal or through the Monet MCP server.
+description: Monet is a local-first Markdown vault with an interactive link graph. Use this skill to read, create, search and connect notes in a Monet vault from the terminal or through the Monet MCP server.
 ---
 
 # Monet
 
 Monet is a Markdown knowledge vault. Notes are plain `.md` files in a folder,
-links are `[[wikilinks]]`, and the same folder can be opened by the macOS app
+links are `[[wikilinks]]`, and the same folder can be opened by the desktop app
 and by the `monet` CLI without any duplicated state.
 
 This skill is installed together with the generated `monet-<command>` skills, which document every command of the CLI in detail.
@@ -41,7 +41,7 @@ The resolution order is: `--vault`, `MONET_VAULT`, the configured vault, the
 current directory. When the vault is not obvious, run `monet vault current`
 before reading or writing — never guess a path.
 
-To open the vault in the macOS app:
+To open the vault in the desktop app:
 
 ```sh
 monet open
@@ -105,8 +105,9 @@ The JSON shape is:
 }
 ```
 
-The macOS app renders exactly this graph in 3D, with the same force-directed
-layout, so a node id from the CLI is the same node you see in the app.
+The desktop app renders exactly this graph with the same deterministic
+force-directed layout, so a node id from the CLI is the same node you see in
+the app.
 
 ## Tags
 

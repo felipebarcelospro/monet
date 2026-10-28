@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Monet — a quiet, local-first Markdown vault for macOS.",
+  "description": "Monet — a quiet, local-first Markdown vault for the desktop.",
   "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",
