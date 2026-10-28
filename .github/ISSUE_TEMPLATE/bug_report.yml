@@ -1,0 +1,112 @@
+name: Bug report
+description: Something is broken or behaves differently than documented.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please search the existing issues first and
+        remove anything private from logs, paths and screenshots.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and its impact.
+      placeholder: The editor shows ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence that reproduces the problem.
+      placeholder: |
+        1. Open a vault with ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Desktop app — editor
+        - Desktop app — reading view
+        - Desktop app — graph
+        - Desktop app — window or menus
+        - CLI
+        - MCP server / agent skill
+        - Markdown rendering
+        - Core engine (links, search, index)
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Monet version
+      description: The app version, `monet --version`, or the commit hash.
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS (Apple silicon)
+        - macOS (Intel)
+        - Linux
+        - Windows
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install Monet?
+      options:
+        - Built from source (pnpm dev)
+        - Packaged app (pnpm package)
+        - CLI binary from a release
+        - Global CLI (pnpm link --global)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Terminal output, Electron console errors or a screenshot.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the existing issues.
+          required: true
+        - label: I removed private notes and personal paths from the report.
+          required: true
+        - label: This is not a security vulnerability (those go to SECURITY.md).
+          required: true
