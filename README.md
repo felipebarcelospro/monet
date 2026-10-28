@@ -1,6 +1,10 @@
 # Monet
 
-**A quiet, local-first Markdown vault with an interactive graph, a rich editor, a CLI and an MCP server for AI agents.**
+**One brain for you and your agents.**
+
+A quiet, local-first Markdown vault: a rich desktop app for you, and a CLI
+and MCP server for your agents. Your notes stay as plain `.md` files in a
+folder you own.
 
 [![CI](https://github.com/felipebarcelospro/monet/actions/workflows/ci.yml/badge.svg)](https://github.com/felipebarcelospro/monet/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -9,8 +13,21 @@
 
 Monet stores notes as plain `.md` files in a folder you own. Links are
 `[[wikilinks]]`, backlinks are indexed automatically, attachments resolve
-relative to the vault, and the same folder is available to the desktop app,
-the command line and AI agents — with no proprietary database in between.
+relative to the vault, and the same folder serves the desktop app, the
+command line and AI agents — with no proprietary database in between. One
+vault, one engine, two ways in:
+
+| For you | For your agents |
+|---|---|
+| A quiet desktop app: rich Markdown editor, interactive graph, backlinks, search, command palette. | A CLI and an MCP server driving the same engine: search, read, create and link notes on your behalf. |
+
+### Why Monet
+
+| You may know… | What it gives you | What Monet does instead |
+|---|---|---|
+| A notes app with an agent pack bolted on | An app for people; agents get prompts. | Agents drive the same engine, with schemas and MCP tools — one brain, not two tools sharing a folder. |
+| A cloud AI notebook | Your brain lives on someone else's servers. | Monet is local-first: the folder is yours, offline included. |
+| Prompt and skill packs | Instructions without an engine. | Monet ships the engine: indexing, search, backlinks and safe writes underneath. |
 
 ## Install the CLI
 
@@ -56,17 +73,17 @@ monet note list
 
 ## Contents
 
+- [Why Monet](#why-monet)
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Requirements](#requirements)
 - [Install](#install-the-cli)
 - [Build from source](#build-from-source)
 - [Monorepo structure](#monorepo-structure)
+- [For you: the desktop app](#for-you-the-desktop-app)
+- [For your agents: CLI and MCP](#for-your-agents-cli-and-mcp)
 - [The vault format](#the-vault-format)
 - [Markdown support](#markdown-support)
-- [Desktop application](#desktop-application)
-- [Command line interface](#command-line-interface)
-- [MCP server and agent skills](#mcp-server-and-agent-skills)
 - [Architecture](#architecture)
 - [Testing](#testing)
 - [Contributing](#contributing)
@@ -85,7 +102,7 @@ monet note list
 | **Interactive graph** | Deterministic force-directed graph with tag filtering, degree-based node sizing, hover inspection, pan and zoom. |
 | **Command line interface** | Notes, search, backlinks, links, tags, the graph and vault switching. Local snapshots with `monet backup`. Human-readable output or `--format json` for scripts. |
 | **MCP server for agents** | Exposes the vault to Claude Code, Cursor, Windsurf, Codex and any MCP client. Agents can search, read, create and link notes. |
-| **Three languages** | English, Brazilian Portuguese and Spanish across the app, CLI and bundled skill. |
+| **Three languages** | English, Brazilian Portuguese and Spanish across the app and the CLI. |
 | **Cross-platform** | Electron on macOS, Linux and Windows, with a native-feeling frameless window. |
 
 ---
@@ -163,7 +180,7 @@ monet note list
 | Package | What it is |
 |---|---|
 | **`@monet/core`** (`packages/core`) | Pure TypeScript engine: vault scanning, frontmatter, wikilinks, index, backlinks, search, graph, safe writes. Node and browser entry points. |
-| **`@monet/cli`** (`packages/cli`) | The `monet` CLI, MCP server and agent skills. Built with [Incur](https://github.com/wevm/incur) so commands, schemas, completions and MCP tools come from one declaration. |
+| **`@monet/cli`** (`packages/cli`) | The `monet` CLI and MCP server — your agents' way into the vault. Built with [Incur](https://github.com/wevm/incur) so commands, schemas, completions, MCP tools and agent skills all come from one declaration. |
 | **`@monet/app`** (`packages/app`) | Desktop application: Electron main process, preload bridge and React 19 renderer with CodeMirror 6. |
 
 ### Common scripts
@@ -241,7 +258,10 @@ vaults you trust. See [SECURITY.md](SECURITY.md).
 
 ---
 
-## Desktop application
+## For you: the desktop app
+
+A quiet place to think. Three columns, a rich editor, and the whole vault as
+a graph — no cloud, no account, just a folder.
 
 ### Download
 
@@ -288,7 +308,13 @@ Keyboard shortcuts follow macOS conventions with `Ctrl` on Linux and Windows.
 
 ---
 
-## Command line interface
+## For your agents: CLI and MCP
+
+The CLI and the MCP server are how agents reach the same brain. Both are
+clients of the engine the app uses — an agent sees exactly what you see,
+because it is the same folder, the same index, the same rules.
+
+### The command line
 
 ```sh
 # Notes
@@ -373,14 +399,14 @@ same folder.
 
 ---
 
-## MCP server and agent skills
+### The MCP server
 
 Monet speaks the Model Context Protocol over stdio:
 
 ```sh
 monet --mcp          # Start the MCP server
 monet mcp add        # Register it with the MCP clients it finds
-monet skills add     # Install the Monet skill for supported agents
+monet skills add     # Install generated skills for supported agents
 monet mcp doctor     # Validate startup and tool listing
 ```
 
@@ -395,9 +421,10 @@ To pin a server to a vault without changing the global configuration:
 MONET_VAULT=~/Documents/Vault monet --mcp
 ```
 
-The bundled skill in `MonetSkill/` is authored in English, Portuguese and
-Spanish; it teaches agents to run `monet vault current` before reading or
-writing and never to guess a path.
+There is no hand-written skill to keep in sync. `monet skills add` generates
+what agents need from the same command declarations that power the CLI, so
+the guidance always matches the tool. The one habit it teaches: run
+`monet vault current` before reading or writing, and never guess a path.
 
 ---
 
