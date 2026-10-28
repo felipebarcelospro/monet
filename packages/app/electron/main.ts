@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'node:fs'
+import { existsSync, realpathSync, writeFileSync } from 'node:fs'
 import { extname, join, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
@@ -219,6 +219,15 @@ function vaultFile(request: Request): string | null {
   const absolute = resolve(root, relative)
   const inside = absolute === root || absolute.startsWith(root.endsWith(sep) ? root : root + sep)
   if (!inside || !existsSync(absolute)) return null
+  try {
+    const realRoot = realpathSync(root)
+    const real = realpathSync(absolute)
+    if (real !== realRoot && !real.startsWith(realRoot.endsWith(sep) ? realRoot : realRoot + sep)) {
+      return null
+    }
+  } catch {
+    return null
+  }
   return absolute
 }
 
@@ -410,8 +419,12 @@ function registerIpc(): void {
 
   ipcMain.handle('vault:read', (_event, id: unknown) => service.read(asString(id, 'id')))
 
-  ipcMain.handle('vault:write', (_event, id: unknown, body: unknown) =>
-    service.write(asString(id, 'id'), asString(body, 'body')),
+  ipcMain.handle('vault:write', (_event, id: unknown, body: unknown, revision: unknown) =>
+    service.write(
+      asString(id, 'id'),
+      asString(body, 'body'),
+      revision === undefined || revision === null ? undefined : asString(revision, 'revision'),
+    ),
   )
 
   ipcMain.handle('vault:create', (_event, input: CreateNoteInput) => service.create(input))
@@ -437,6 +450,11 @@ function registerIpc(): void {
     const absolute = resolve(root, relative)
     const inside = absolute.startsWith(root.endsWith(sep) ? root : root + sep)
     if (!inside || !existsSync(absolute)) throw new Error('File not found')
+    const realRoot = realpathSync(root)
+    const real = realpathSync(absolute)
+    if (real !== realRoot && !real.startsWith(realRoot.endsWith(sep) ? realRoot : realRoot + sep)) {
+      throw new Error('File not found')
+    }
     const error = await shell.openPath(absolute)
     if (error.length > 0) throw new Error(error)
   })
@@ -447,12 +465,15 @@ function registerIpc(): void {
     shell.showItemInFolder(join(service.root, note.path))
   })
 
-  ipcMain.handle('vault:frontmatter', (_event, id: unknown, key: unknown, value: unknown) =>
-    service.updateFrontmatter(
-      asString(id, 'id'),
-      asString(key, 'key'),
-      normalizeFrontmatter(value),
-    ),
+  ipcMain.handle(
+    'vault:frontmatter',
+    (_event, id: unknown, key: unknown, value: unknown, revision: unknown) =>
+      service.updateFrontmatter(
+        asString(id, 'id'),
+        asString(key, 'key'),
+        normalizeFrontmatter(value),
+        revision === undefined || revision === null ? undefined : asString(revision, 'revision'),
+      ),
   )
 
   ipcMain.handle('vault:search', (_event, query: unknown, limit: unknown) =>

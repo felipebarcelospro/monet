@@ -1,6 +1,6 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join, relative, resolve, sep } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 
 import {
   type MarkdownDocument,
@@ -9,6 +9,7 @@ import {
   scalarText,
   stringList,
 } from './frontmatter.js'
+import { renderFrontmatter } from './write.js'
 import {
   type Heading,
   type Wikilink,
@@ -17,6 +18,7 @@ import {
   parseTags,
   stripMarkdownExtension,
 } from './wikilink.js'
+import { revisionOf } from './revision.js'
 
 /** A Markdown note stored inside a vault. */
 export interface Note {
@@ -32,18 +34,39 @@ export interface Note {
   tags: string[]
   /** The complete frontmatter mapping. */
   frontmatter: Record<string, YAMLValue>
+  /** The original frontmatter block, used to preserve comments and order. */
+  frontmatterRaw?: string
+  /** The canonical rendering of the parsed values at read time. */
+  frontmatterCanonical?: string
   /** The Markdown body without the frontmatter block. */
   body: string
   /** The outgoing links and embeds found in the body. */
   links: Wikilink[]
   /** The headings found in the body. */
   headings: Heading[]
+  /** A fingerprint of the file's bytes, used to detect concurrent edits. */
+  revision: string
   /** The last modification time, in milliseconds since the epoch. */
   modifiedAt: number
   /** The creation time, when the platform reports one. */
   createdAt?: number
   /** The byte size of the file on disk. */
   byteSize: number
+}
+
+/**
+ * Whether a path is safe to join to a vault root.
+ *
+ * A vault-relative path must stay relative, must not contain a parent
+ * segment, and must not be empty. This is the check every write uses before
+ * touching the filesystem; the renderer and the CLI both pass through it.
+ */
+export function isSafeRelativePath(candidate: string): boolean {
+  if (candidate.length === 0 || isAbsolute(candidate)) return false
+  if (/^[A-Za-z]:/u.test(candidate)) return false
+  const normalized = candidate.replaceAll('\\', '/')
+  if (normalized.startsWith('//') || normalized.includes('\0')) return false
+  return !normalized.split('/').some((part) => part === '..')
 }
 
 /** A note reduced to the fields the resolver needs. */
@@ -325,7 +348,9 @@ export class Vault {
         const full = join(directory, entry)
         let stats
         try {
-          stats = statSync(full)
+          // Do not follow symlinks: a link inside the vault must not make the
+          // index read a note from outside the vault.
+          stats = lstatSync(full)
         } catch {
           continue
         }
@@ -353,7 +378,36 @@ export class Vault {
 
   /** The absolute path of a vault-relative path. */
   absolutePath(relativePath: string): string {
-    return join(this.root, ...relativePath.split('/'))
+    if (!isSafeRelativePath(relativePath)) {
+      throw new VaultError(`Unsafe vault path: ${relativePath}`)
+    }
+    const absolute = resolve(this.root, relativePath.replaceAll('\\', '/'))
+    const root = this.root.endsWith(sep) ? this.root : `${this.root}${sep}`
+    if (absolute !== this.root && !absolute.startsWith(root)) {
+      throw new VaultError(`Unsafe vault path: ${relativePath}`)
+    }
+
+    // A symlink inside the vault can point outside it. Check the real path of
+    // the file, or of its nearest existing parent when it is about to be
+    // created.
+    try {
+      const realRoot = realpathSync(this.root)
+      let probe = absolute
+      while (!existsSync(probe)) {
+        const parent = dirname(probe)
+        if (parent === probe) break
+        probe = parent
+      }
+      const real = realpathSync(probe)
+      if (real !== realRoot && !real.startsWith(`${realRoot}${sep}`)) {
+        throw new VaultError(`Unsafe vault path: ${relativePath}`)
+      }
+    } catch (error) {
+      if (error instanceof VaultError) throw error
+      throw new VaultError(`Unsafe vault path: ${relativePath}`)
+    }
+
+    return absolute
   }
 
   /** Reads and parses a single note from disk. */
@@ -377,7 +431,7 @@ export function parseNote(
   try {
     document = parseMarkdown(contents)
   } catch {
-    document = { frontmatter: {}, body: contents, raw: contents }
+    document = { frontmatter: {}, frontmatterRaw: '', body: contents, raw: contents }
   }
 
   const id = relativePath.replace(/\.[^./\\]+$/u, '')
@@ -428,9 +482,12 @@ export function parseNote(
     aliases,
     tags,
     frontmatter: document.frontmatter,
+    frontmatterRaw: document.frontmatterRaw,
+    frontmatterCanonical: renderFrontmatter(document.frontmatter),
     body: document.body,
     links: parseLinks(document.body),
     headings: parseHeadings(document.body),
+    revision: revisionOf(contents),
     modifiedAt,
     ...(createdAt !== undefined ? { createdAt } : {}),
     byteSize: Buffer.byteLength(contents, 'utf8'),

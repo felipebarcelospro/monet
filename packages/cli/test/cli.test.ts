@@ -1,11 +1,21 @@
-import { cpSync, mkdtempSync, rmSync } from 'node:fs'
+import {
+  cpSync,
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { cli } from '../src/index.js'
+import { writeNote } from '../src/lib/context.js'
+import { Vault } from '@monet/core'
 
 /** The sample vault used by the CLI tests. */
 const VAULT = fileURLToPath(new URL('../../../Fixtures/vault', import.meta.url))
@@ -205,6 +215,111 @@ describe('monet CLI', () => {
     const { output, code } = await run(['vault', 'use', missing, '--format', 'json'])
     expect(code).toBe(1)
     expect(output).toContain('not-a-vault')
+  })
+
+  it('preserves a multiline frontmatter block and saves added tags', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'monet-edit-'))
+    const file = join(directory, 'Note.md')
+    writeFileSync(
+      file,
+      `---
+title: Note
+tags: [one]
+description: |
+  First line.
+  Second line.
+---
+Body.
+`,
+      'utf8',
+    )
+
+    const { code } = await run([
+      'note',
+      'edit',
+      'Note',
+      '--tag',
+      'two',
+      '--append',
+      'More.',
+      '--vault',
+      directory,
+      '--format',
+      'json',
+    ])
+    expect(code).toBe(0)
+
+    const contents = readFileSync(file, 'utf8')
+    expect(contents).toContain('description: |')
+    expect(contents).toContain('  First line.\n  Second line.')
+    expect(contents).toContain('  - one')
+    expect(contents).toContain('  - two')
+    expect(contents).toContain('More.')
+    rmSync(directory, { recursive: true, force: true })
+  })
+
+  it('refuses to overwrite a note that changed after it was read', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'monet-conflict-'))
+    const file = join(directory, 'Note.md')
+    writeFileSync(file, '---\ntitle: Note\n---\nOriginal.\n', 'utf8')
+
+    const vault = Vault.open(directory)
+    const note = vault.index.notes[0]!
+    writeFileSync(file, '---\ntitle: Note\n---\nChanged outside.\n', 'utf8')
+
+    expect(() => writeNote(vault, note, 'Mine.')).toThrow(/changed on disk/)
+    expect(readFileSync(file, 'utf8')).toContain('Changed outside.')
+    rmSync(directory, { recursive: true, force: true })
+  })
+
+  it('writes a snapshot outside the vault and prunes old ones', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'monet-backup-src-'))
+    const backups = mkdtempSync(join(tmpdir(), 'monet-backup-out-'))
+    writeFileSync(join(directory, 'Note.md'), '# Note\n', 'utf8')
+
+    const previous = process.env['MONET_BACKUP_DIR']
+    process.env['MONET_BACKUP_DIR'] = backups
+    try {
+      const first = await run(['backup', '--vault', directory, '--keep', '1', '--format', 'json'])
+      expect(first.code).toBe(0)
+      const snapshot = JSON.parse(first.output) as { destination: string }
+      expect(existsSync(join(snapshot.destination, 'Note.md'))).toBe(true)
+
+      const second = await run(['backup', '--vault', directory, '--keep', '1', '--format', 'json'])
+      expect(second.code).toBe(0)
+      const remaining = readdirSync(backups).filter((entry) =>
+        entry.startsWith('monet-backup-src-'),
+      )
+      expect(remaining).toHaveLength(1)
+    } finally {
+      if (previous === undefined) delete process.env['MONET_BACKUP_DIR']
+      else process.env['MONET_BACKUP_DIR'] = previous
+      rmSync(directory, { recursive: true, force: true })
+      rmSync(backups, { recursive: true, force: true })
+    }
+  })
+
+  it('refuses to create a note outside the vault', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'monet-escape-'))
+    const outside = join(dirname(directory), 'monet-outside')
+
+    const { output, code } = await run([
+      'note',
+      'new',
+      'Escape',
+      '--folder',
+      '../monet-outside',
+      '--vault',
+      directory,
+      '--format',
+      'json',
+    ])
+
+    expect(code).toBe(1)
+    expect(output).toContain('INVALID_PATH')
+    expect(existsSync(join(outside, 'Escape.md'))).toBe(false)
+    rmSync(directory, { recursive: true, force: true })
+    rmSync(outside, { recursive: true, force: true })
   })
 
   it('exposes the command manifest with --llms', async () => {

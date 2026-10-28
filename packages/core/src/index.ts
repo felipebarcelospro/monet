@@ -10,6 +10,7 @@
 
 export * from './config.js'
 export * from './frontmatter.js'
+export * from './revision.js'
 export * from './graph.js'
 export * from './search.js'
 export * from './vault.js'

@@ -44,7 +44,7 @@ the command line and AI agents — with no proprietary database in between.
 | **Rich Markdown** | Tables, task lists, footnotes, images, video, audio, file attachments, Mermaid diagrams, KaTeX math, syntax-highlighted code, callouts and raw HTML. `⌘E` toggles a full reading view. |
 | **Live editor** | CodeMirror 6 with tables, media, diagrams, display math and note embeds rendered in place; clicking a block returns to its Markdown. Task boxes are clickable. |
 | **Interactive graph** | Deterministic force-directed graph with tag filtering, degree-based node sizing, hover inspection, pan and zoom. |
-| **Command line interface** | Notes, search, backlinks, links, tags, the graph and vault switching. Human-readable output or `--format json` for scripts. |
+| **Command line interface** | Notes, search, backlinks, links, tags, the graph and vault switching. Local snapshots with `monet backup`. Human-readable output or `--format json` for scripts. |
 | **MCP server for agents** | Exposes the vault to Claude Code, Cursor, Windsurf, Codex and any MCP client. Agents can search, read, create and link notes. |
 | **Three languages** | English, Brazilian Portuguese and Spanish across the app, CLI and bundled skill. |
 | **Cross-platform** | Electron on macOS, Linux and Windows, with a native-feeling frameless window. |
@@ -245,15 +245,42 @@ monet link create "Checklist" --target "Design Notes"
 monet graph --format json
 monet tags
 
-# Vaults
+# Vaults and safety
 monet vault use ~/Documents/Vault
 monet vault current
 monet vault list
+monet backup                       # snapshot outside the vault
 monet open
 ```
 
 Every command accepts `--format toon|json|yaml|md|jsonl`. The default is TOON,
 compact for agents; use `--format json` for programs.
+
+### Search
+
+Search is local and dependency-free. It folds accents (`reuniao` finds
+`Reunião`), matches every word of a multi-word query in any order, falls back
+to a fuzzy title match, and returns an excerpt around the first body hit.
+Exact and prefix titles rank above aliases, tags and body text.
+
+Embeddings are not part of this release: there is no model download, no vector
+database and no network call. Semantic and related-note search are on the
+roadmap, behind the same `search` surface.
+
+### Backups
+
+A vault is a plain folder, and `monet backup` writes a local snapshot without
+touching the original:
+
+```sh
+monet backup                       # ~/.local/share/monet/backups
+monet backup --keep 30             # keep the last 30 snapshots
+monet backup --output ~/Backups    # choose the destination
+```
+
+Git, Time Machine or any folder synchroniser work too; the vault has no
+proprietary database. `.git`, `node_modules`, `dist`, `build` and the app lock
+are skipped in a snapshot.
 
 ### Choosing the vault
 

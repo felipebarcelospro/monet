@@ -1,4 +1,4 @@
-import { mkdirSync, renameSync, unlinkSync } from 'node:fs'
+import { existsSync, mkdirSync, renameSync, unlinkSync } from 'node:fs'
 import { dirname } from 'node:path'
 
 import { Cli, z } from 'incur'
@@ -13,7 +13,16 @@ import {
   vaultOptions,
   writeNote,
 } from '../lib/context.js'
-import { configPath, parseLinks, readConfig, selectVault, writeConfig } from '@monet/core'
+import {
+  configPath,
+  isSafeRelativePath,
+  NoteConflictError,
+  parseLinks,
+  readConfig,
+  selectVault,
+  stringList,
+  writeConfig,
+} from '@monet/core'
 
 // ---------------------------------------------------------------------------
 // monet note new
@@ -51,8 +60,23 @@ export function runNoteNew(
   const vault = openVault(c)
   const messages_ = messages(c)
 
+  if (c.options.folder !== undefined && !isSafeRelativePath(c.options.folder)) {
+    return c.error({
+      code: 'INVALID_PATH',
+      message: messages_.get('error.invalidPath', { path: c.options.folder }),
+      retryable: false,
+    })
+  }
+
   const relativePath = notePath(c.args.title, c.options.folder)
-  if (vault.index.notesByPath.has(relativePath)) {
+  if (!isSafeRelativePath(relativePath)) {
+    return c.error({
+      code: 'INVALID_PATH',
+      message: messages_.get('error.invalidPath', { path: relativePath }),
+      retryable: false,
+    })
+  }
+  if (vault.index.notesByPath.has(relativePath) || existsSync(vault.absolutePath(relativePath))) {
     return c.error({
       code: 'NOTE_EXISTS',
       message: messages_.get('error.noteExists', { path: relativePath }),
@@ -88,6 +112,7 @@ export function runNoteNew(
     body,
     links: parseLinks(body),
     headings: [],
+    revision: '',
     modifiedAt: Date.now(),
     byteSize: Buffer.byteLength(body, 'utf8'),
   }
@@ -278,12 +303,39 @@ export function runNoteEdit(
     body = body.endsWith('\n') ? `${body}${c.options.append}\n` : `${body}\n${c.options.append}\n`
   }
   if (c.options.tag && c.options.tag.length > 0) {
-    const merged = new Set(found.tags.map((tag) => tag.toLowerCase()))
-    for (const tag of c.options.tag) merged.add(tag.toLowerCase())
-    found.tags = [...merged]
+    // `found.tags` also contains inline #tags from the body. Only the
+    // frontmatter list is written back, so merge into that list instead of
+    // replacing it with the derived set.
+    const existing = found.frontmatter['tags'] ? stringList(found.frontmatter['tags']) : []
+    const merged: string[] = []
+    const seen = new Set<string>()
+    for (const tag of [...existing, ...c.options.tag]) {
+      const clean = tag.trim()
+      if (clean.length === 0) continue
+      const key = clean.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      merged.push(clean)
+    }
+    found.frontmatter['tags'] = {
+      kind: 'array',
+      value: merged.map((value) => ({ kind: 'string', value })),
+    }
+    found.tags = merged
   }
 
-  writeNote(vault, found, body)
+  try {
+    writeNote(vault, found, body)
+  } catch (error) {
+    if (error instanceof NoteConflictError) {
+      return c.error({
+        code: 'NOTE_CONFLICT',
+        message: messages_.get('error.noteConflict', { path: found.relativePath }),
+        retryable: true,
+      })
+    }
+    throw error
+  }
 
   return c.ok(
     { path: found.relativePath, title: found.title, bytes: Buffer.byteLength(body, 'utf8') },
@@ -340,7 +392,14 @@ export function runNoteMove(
   }
 
   const destination = c.options.to.endsWith('.md') ? c.options.to : `${c.options.to}.md`
-  if (vault.index.notesByPath.has(destination)) {
+  if (!isSafeRelativePath(destination)) {
+    return c.error({
+      code: 'INVALID_PATH',
+      message: messages_.get('error.invalidPath', { path: destination }),
+      retryable: false,
+    })
+  }
+  if (vault.index.notesByPath.has(destination) || existsSync(vault.absolutePath(destination))) {
     return c.error({
       code: 'NOTE_EXISTS',
       message: messages_.get('error.noteExists', { path: destination }),

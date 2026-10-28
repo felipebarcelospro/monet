@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
 import { z } from 'incur'
@@ -6,11 +6,14 @@ import { z } from 'incur'
 import {
   type ConcurrencyWarning,
   type Note,
+  NoteConflictError,
   Vault,
-  renderNote,
-  notePath,
+  atomicWriteFileSync,
   detectConcurrentApp,
+  notePath,
+  renderNote,
   resolveVault,
+  revisionOf,
 } from '@monet/core'
 
 import { appBundleCandidates } from './paths.js'
@@ -102,8 +105,21 @@ export function findNote(vault: Vault, target: string): Note | undefined {
  */
 export function writeNote(vault: Vault, note: Note, body: string): void {
   const absolute = vault.absolutePath(note.relativePath)
+
+  // Refuse to overwrite a file that changed after this command read it. A
+  // newly created note has no revision yet and is written unconditionally.
+  if (note.revision.length > 0 && existsSync(absolute)) {
+    const current = revisionOf(readFileSync(absolute, 'utf8'))
+    if (current !== note.revision) throw new NoteConflictError(note.relativePath)
+  }
+  if (note.revision.length === 0 && existsSync(absolute)) {
+    throw new NoteConflictError(note.relativePath)
+  }
+
+  const contents = renderNote(note, body)
   mkdirSync(dirname(absolute), { recursive: true })
-  writeFileSync(absolute, renderNote(note, body), 'utf8')
+  atomicWriteFileSync(absolute, contents)
+  note.revision = revisionOf(contents)
 }
 
 /** Re-exported so every command builds paths the same way. */

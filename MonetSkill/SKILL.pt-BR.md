@@ -47,6 +47,18 @@ Para abrir o cofre no app desktop:
 monet open
 ```
 
+## Backups
+
+Antes de uma edição em massa, grave um snapshot fora do cofre:
+
+```sh
+monet backup --keep 10
+```
+
+O destino padrão é `~/.local/share/monet/backups`; `--output` escolhe outra
+pasta. Um cofre é uma pasta comum, então Git ou qualquer ferramenta de backup
+também funciona.
+
 ## Lendo notas
 
 ```sh

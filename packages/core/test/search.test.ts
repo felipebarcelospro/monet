@@ -22,6 +22,7 @@ function note(
     body,
     links: [],
     headings: [],
+    revision: '',
     modifiedAt: 0,
     byteSize: body.length,
     ...extra,
@@ -67,6 +68,30 @@ describe('search engine', () => {
     const results = engine.search('Graph')
     expect(results[0]?.noteID).toBe('Graph Rendering')
     expect(results.length).toBe(2)
+  })
+
+  it('ignores accents in titles and bodies', () => {
+    const engine = new SearchEngine(
+      new VaultIndex([note('Reuniao', 'Reuniao.md', 'Reunião de equipe', 'Pauta da reunião.')]),
+    )
+    expect(engine.search('reuniao')[0]?.noteID).toBe('Reuniao')
+  })
+
+  it('matches every word of a multi-word query in any order', () => {
+    const engine = new SearchEngine(
+      new VaultIndex([
+        note('Alpha', 'Alpha.md', 'Alpha', 'Alpha beta gamma.'),
+        note('Beta', 'Beta.md', 'Beta', 'Only beta.'),
+      ]),
+    )
+    const results = engine.search('gamma alpha')
+    expect(results[0]?.noteID).toBe('Alpha')
+    expect(results[0]?.excerpt).toBeTruthy()
+  })
+
+  it('finds a title with the words in a different order', () => {
+    const engine = new SearchEngine(makeIndex())
+    expect(engine.search('rendering graph')[0]?.noteID).toBe('Graph Rendering')
   })
 
   it('finds a match in the body', () => {

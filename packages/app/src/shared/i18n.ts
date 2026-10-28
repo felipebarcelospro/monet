@@ -209,6 +209,8 @@ const en = {
 
   'error.vaultOpen': 'That folder could not be opened as a vault.',
   'error.noteOpen': 'That note could not be opened.',
+  'error.conflict':
+    'This note changed outside Monet. Your text was kept; copy it or reopen the note.',
   'error.save': 'The note could not be saved.',
   'error.generic': 'Something went wrong.',
   'error.notFound': 'Not found.',
@@ -451,6 +453,8 @@ const ptBR: Record<MessageKey, string> = {
 
   'error.vaultOpen': 'Não foi possível abrir essa pasta como cofre.',
   'error.noteOpen': 'Não foi possível abrir essa nota.',
+  'error.conflict':
+    'Esta nota mudou fora do Monet. Seu texto foi mantido; copie-o ou reabra a nota.',
   'error.save': 'Não foi possível salvar a nota.',
   'error.generic': 'Algo deu errado.',
   'error.notFound': 'Não encontrado.',
@@ -690,6 +694,8 @@ const es: Record<MessageKey, string> = {
 
   'error.vaultOpen': 'No se pudo abrir esa carpeta como cofre.',
   'error.noteOpen': 'No se pudo abrir esa nota.',
+  'error.conflict':
+    'Esta nota cambió fuera de Monet. Tu texto se conservó; cópialo o vuelve a abrir la nota.',
   'error.save': 'No se pudo guardar la nota.',
   'error.generic': 'Algo salió mal.',
   'error.notFound': 'No encontrado.',

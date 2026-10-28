@@ -1,4 +1,7 @@
 import { spawn } from 'node:child_process'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
@@ -98,6 +101,71 @@ function startServer(): McpStdioClient {
 }
 
 describe('MCP contract', () => {
+  it('preserves frontmatter while editing and rejects paths outside the vault', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'monet-mcp-'))
+    const file = join(directory, 'Note.md')
+    writeFileSync(
+      file,
+      `---
+title: Note
+tags: [one]
+description: |
+  First line.
+  Second line.
+---
+Body.
+`,
+      'utf8',
+    )
+
+    const server = startServer()
+    try {
+      const initialize = await server.request('initialize', {
+        protocolVersion: '2024-11-05',
+        capabilities: {},
+        clientInfo: { name: 'monet-test', version: '0.0.0' },
+      })
+      expect(initialize.error).toBeUndefined()
+      server.notify('notifications/initialized')
+
+      const edit = await server.request('tools/call', {
+        name: 'note_edit',
+        arguments: {
+          title: 'Note',
+          tag: ['two'],
+          append: 'More.',
+          vault: directory,
+          format: 'json',
+        },
+      })
+      expect(edit.error).toBeUndefined()
+      expect((edit.result as { isError?: boolean }).isError).not.toBe(true)
+
+      const contents = readFileSync(file, 'utf8')
+      expect(contents).toContain('description: |')
+      expect(contents).toContain('  First line.\n  Second line.')
+      expect(contents).toContain('  - one')
+      expect(contents).toContain('  - two')
+      expect(contents).toContain('More.')
+
+      const escape = await server.request('tools/call', {
+        name: 'note_new',
+        arguments: {
+          title: 'Escape',
+          folder: '../monet-mcp-outside',
+          vault: directory,
+          format: 'json',
+        },
+      })
+      expect((escape.result as { isError?: boolean }).isError).toBe(true)
+      expect(existsSync(join(dirname(directory), 'monet-mcp-outside', 'Escape.md'))).toBe(false)
+    } finally {
+      server.close()
+      rmSync(directory, { recursive: true, force: true })
+      rmSync(join(dirname(directory), 'monet-mcp-outside'), { recursive: true, force: true })
+    }
+  })
+
   it('answers initialize, lists the tools and runs a real tool', async () => {
     const server = startServer()
     try {

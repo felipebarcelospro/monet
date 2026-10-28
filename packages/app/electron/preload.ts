@@ -23,7 +23,8 @@ const api: MonetApi = {
   closeVault: () => ipcRenderer.invoke('vault:close'),
   snapshot: () => ipcRenderer.invoke('vault:snapshot'),
   readNote: (id: string) => ipcRenderer.invoke('vault:read', id),
-  writeNote: (id: string, body: string) => ipcRenderer.invoke('vault:write', id, body),
+  writeNote: (id: string, body: string, expectedRevision?: string) =>
+    ipcRenderer.invoke('vault:write', id, body, expectedRevision),
   createNote: (input: CreateNoteInput) => ipcRenderer.invoke('vault:create', input),
   renameNote: (id: string, title: string) => ipcRenderer.invoke('vault:rename', id, title),
   deleteNote: (id: string) => ipcRenderer.invoke('vault:delete', id),
@@ -31,8 +32,8 @@ const api: MonetApi = {
     ipcRenderer.invoke('vault:renameFolder', path, name),
   revealNote: (id: string) => ipcRenderer.invoke('vault:reveal', id),
   openAsset: (path: string) => ipcRenderer.invoke('vault:openAsset', path),
-  updateFrontmatter: (id: string, key: string, value: FrontmatterInput) =>
-    ipcRenderer.invoke('vault:frontmatter', id, key, value),
+  updateFrontmatter: (id: string, key: string, value: FrontmatterInput, revision?: string) =>
+    ipcRenderer.invoke('vault:frontmatter', id, key, value, revision),
   search: (query: string, limit?: number) => ipcRenderer.invoke('vault:search', query, limit),
   graph: () => ipcRenderer.invoke('vault:graph'),
   setPreferences: (patch: Partial<Preferences>) => ipcRenderer.invoke('prefs:set', patch),

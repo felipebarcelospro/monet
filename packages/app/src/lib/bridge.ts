@@ -154,7 +154,7 @@ function createMockBridge(): MonetApi {
       if (data) {
         data.snapshot.notes = data.snapshot.notes.map((note) => (note.id === id ? summary : note))
       }
-      return { summary, modifiedAt: Date.now() }
+      return { summary, modifiedAt: Date.now(), revision: 'mock' }
     },
     async createNote(input: CreateNoteInput) {
       const mock = await load()
@@ -166,6 +166,7 @@ function createMockBridge(): MonetApi {
         title,
         frontmatter: { type: 'note', created: new Date().toISOString().slice(0, 10) },
         body: input.body ?? '',
+        revision: 'mock',
         modifiedAt: Date.now(),
         createdAt: Date.now(),
       }
@@ -211,7 +212,7 @@ function createMockBridge(): MonetApi {
       if (key === 'title' && typeof value === 'string') document.title = value
       const summary = summaryOf(document)
       mock.snapshot.notes = mock.snapshot.notes.map((note) => (note.id === id ? summary : note))
-      return { summary, snapshot: mock.snapshot }
+      return { summary, snapshot: mock.snapshot, revision: 'mock' }
     },
     async search(query: string, limit = 60): Promise<SearchHit[]> {
       const mock = await load()

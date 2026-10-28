@@ -99,6 +99,8 @@ export interface NoteDocument {
   title: string
   frontmatter: Record<string, unknown>
   body: string
+  /** Fingerprint of the file when it was read, for conflict detection. */
+  revision: string
   modifiedAt: number
   createdAt: number
 }
@@ -163,6 +165,7 @@ export interface AppInfo {
 export interface WriteResult {
   summary: NoteSummary
   modifiedAt: number
+  revision: string
 }
 
 /** A note creation request. */
@@ -202,7 +205,7 @@ export interface MonetApi {
   closeVault: () => Promise<void>
   snapshot: () => Promise<VaultSnapshot | null>
   readNote: (id: string) => Promise<NoteDocument | null>
-  writeNote: (id: string, body: string) => Promise<WriteResult>
+  writeNote: (id: string, body: string, expectedRevision?: string) => Promise<WriteResult>
   createNote: (
     input: CreateNoteInput,
   ) => Promise<{ document: NoteDocument; snapshot: VaultSnapshot }>
@@ -218,7 +221,8 @@ export interface MonetApi {
     id: string,
     key: string,
     value: FrontmatterInput,
-  ) => Promise<{ summary: NoteSummary; snapshot: VaultSnapshot }>
+    expectedRevision?: string,
+  ) => Promise<{ summary: NoteSummary; snapshot: VaultSnapshot; revision: string }>
   search: (query: string, limit?: number) => Promise<SearchHit[]>
   graph: (tag?: string) => Promise<GraphData>
   setPreferences: (patch: Partial<Preferences>) => Promise<Preferences>

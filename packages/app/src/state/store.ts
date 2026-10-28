@@ -88,8 +88,8 @@ interface AppState {
   createNote: (title?: string) => Promise<void>
   updateBody: (body: string) => void
   updateTitle: (title: string) => void
-  flushSave: () => Promise<void>
-  save: () => Promise<void>
+  flushSave: () => Promise<boolean>
+  save: () => Promise<boolean>
   deleteNote: (id?: string) => Promise<void>
   renameNote: (title: string) => Promise<void>
   setProperty: (key: string, value: FrontmatterInput) => Promise<void>
@@ -399,13 +399,13 @@ export const useStore = create<AppState>((set, get) => {
     },
 
     async openVaultDialog() {
-      await get().flushSave()
+      if (!(await get().flushSave())) return
       const snapshot = await bridge.openVaultDialog()
       if (snapshot) adoptVault(snapshot)
     },
 
     async openVaultPath(path) {
-      await get().flushSave()
+      if (!(await get().flushSave())) return
       try {
         const snapshot = await bridge.openVault(path)
         adoptVault(snapshot)
@@ -416,7 +416,7 @@ export const useStore = create<AppState>((set, get) => {
     },
 
     async createVaultDialog() {
-      await get().flushSave()
+      if (!(await get().flushSave())) return
       const snapshot = await bridge.createVaultDialog()
       if (snapshot) adoptVault(snapshot)
     },
@@ -428,7 +428,7 @@ export const useStore = create<AppState>((set, get) => {
       }
       if (get().selectedId === id && get().document?.id === id) return
 
-      await get().flushSave()
+      if (!(await get().flushSave())) return
       const token = ++loadSequence
       set({ selectedId: id, documentLoading: true, dirty: false })
       if (options?.pushHistory !== false) pushHistory(id)
@@ -490,7 +490,7 @@ export const useStore = create<AppState>((set, get) => {
     },
 
     async createNote(title) {
-      await get().flushSave()
+      if (!(await get().flushSave())) return
       const source = get().source
       const folder = source.kind === 'folder' ? source.path : ''
       const result = await bridge.createNote({ title: title ?? 'Untitled', folder })
@@ -541,10 +541,19 @@ export const useStore = create<AppState>((set, get) => {
         if (!current) return
         const trimmed = current.title.trim()
         if (trimmed.length === 0) return
-        void bridge.updateFrontmatter(current.id, 'title', trimmed).then((result) => {
-          if (get().document?.id !== current.id) return
-          set({ snapshot: result.snapshot })
-        })
+        void bridge
+          .updateFrontmatter(current.id, 'title', trimmed, current.revision)
+          .then((result) => {
+            if (get().document?.id !== current.id) return
+            set({
+              snapshot: result.snapshot,
+              document: get().document ? { ...get().document!, revision: result.revision } : null,
+            })
+          })
+          .catch((error: unknown) => {
+            const conflict = error instanceof Error && error.message.includes('NOTE_CONFLICT')
+            get().showToast(t(conflict ? 'error.conflict' : 'error.save'), 'error')
+          })
       }, 700)
     },
 
@@ -553,13 +562,13 @@ export const useStore = create<AppState>((set, get) => {
         window.clearTimeout(saveTimer)
         saveTimer = null
       }
-      await get().save()
+      return get().save()
     },
 
-    async save() {
+    async save(): Promise<boolean> {
       const state = get()
       const document = state.document
-      if (!document || !state.dirty) return
+      if (!document || !state.dirty) return true
 
       const body = document.body
       const id = document.id
@@ -567,8 +576,8 @@ export const useStore = create<AppState>((set, get) => {
       set({ saving: true })
 
       try {
-        const result = await bridge.writeNote(id, body)
-        if (sequence !== saveSequence) return
+        const result = await bridge.writeNote(id, body, document.revision)
+        if (sequence !== saveSequence) return false
         set((current) => {
           const stillOpen = current.document?.id === id
           const dirty = stillOpen ? current.document!.body !== body : false
@@ -576,6 +585,9 @@ export const useStore = create<AppState>((set, get) => {
             ? current.snapshot.notes.map((note) => (note.id === id ? result.summary : note))
             : []
           return {
+            document: stillOpen
+              ? { ...current.document!, revision: result.revision }
+              : current.document,
             saving: dirty,
             dirty,
             savedAt: result.modifiedAt,
@@ -583,17 +595,20 @@ export const useStore = create<AppState>((set, get) => {
           }
         })
         if (get().dirty) scheduleSave()
+        return true
       } catch (error) {
         set({ saving: false })
-        get().showToast(t('error.save'), 'error')
+        const conflict = error instanceof Error && error.message.includes('NOTE_CONFLICT')
+        get().showToast(t(conflict ? 'error.conflict' : 'error.save'), 'error')
         console.error(error)
+        return false
       }
     },
 
     async deleteNote(id) {
       const target = id ?? get().selectedId
       if (!target) return
-      await get().flushSave()
+      if (!(await get().flushSave())) return
       try {
         const snapshot = await bridge.deleteNote(target)
         set({ snapshot, selectedId: null, document: null, history: [], historyIndex: -1 })
@@ -610,7 +625,7 @@ export const useStore = create<AppState>((set, get) => {
       if (!document) return
       const trimmed = title.trim()
       if (trimmed.length === 0) return
-      await get().flushSave()
+      if (!(await get().flushSave())) return
       try {
         const result = await bridge.renameNote(document.id, trimmed)
         set({
@@ -631,13 +646,15 @@ export const useStore = create<AppState>((set, get) => {
       const document = get().document
       if (!document) return
       try {
-        const result = await bridge.updateFrontmatter(document.id, key, value)
+        const result = await bridge.updateFrontmatter(document.id, key, value, document.revision)
         const frontmatter = { ...get().document?.frontmatter }
         if (value === null) delete frontmatter[key]
         else frontmatter[key] = value
         set({
           snapshot: result.snapshot,
-          document: get().document ? { ...get().document!, frontmatter } : null,
+          document: get().document
+            ? { ...get().document!, frontmatter, revision: result.revision }
+            : null,
         })
       } catch (error) {
         get().showToast(t('error.generic'), 'error')
@@ -857,7 +874,7 @@ export const useStore = create<AppState>((set, get) => {
       const target = parent.length > 0 ? `${parent}/${trimmed}` : trimmed
       if (target === path) return
 
-      await get().flushSave()
+      if (!(await get().flushSave())) return
       const remap = (id: string): string =>
         id.startsWith(`${path}/`) ? `${target}${id.slice(path.length)}` : id
 

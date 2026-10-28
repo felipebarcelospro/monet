@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, readFileSync, existsSync, rmSync } from 'node:fs'
+import { cpSync, mkdtempSync, readFileSync, existsSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -53,8 +53,36 @@ describe('folder rename', () => {
     expect(() => service.renameFolder('Projects', 'Notes')).toThrow(/already exists/)
   })
 
-  it('refuses slashes and empty names', () => {
+  it('refuses slashes, empty names, dots and parent folders', () => {
     expect(() => service.renameFolder('Projects', 'a/b')).toThrow()
     expect(() => service.renameFolder('Projects', '   ')).toThrow()
+    expect(() => service.renameFolder('Projects', '..')).toThrow()
+  })
+
+  it('refuses a new note outside the vault', () => {
+    expect(() => service.create({ title: 'Escape', folder: '../outside' })).toThrow(
+      /inside the vault/,
+    )
+    expect(existsSync(join(scratch, '..', 'outside'))).toBe(false)
+  })
+
+  it('does not overwrite frontmatter after an external edit either', () => {
+    const document = service.read('Index')!
+    writeFileSync(join(scratch, 'Index.md'), '# External\n', 'utf8')
+
+    expect(() => service.updateFrontmatter('Index', 'status', 'active', document.revision)).toThrow(
+      /NOTE_CONFLICT/,
+    )
+  })
+
+  it('does not overwrite a note that changed on disk', () => {
+    const document = service.read('Index')!
+    const absolute = join(scratch, 'Index.md')
+    writeFileSync(absolute, '# Changed by another editor\n', 'utf8')
+
+    expect(() => service.write('Index', '# My version\n', document.revision)).toThrow(
+      /NOTE_CONFLICT/,
+    )
+    expect(readFileSync(absolute, 'utf8')).toBe('# Changed by another editor\n')
   })
 })

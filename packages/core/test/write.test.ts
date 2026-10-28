@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { describe, expect, it } from 'vitest'
 
 import { atomicWriteFileSync, renderFrontmatter, renderNote } from '../src/write.js'
-import { parseMarkdown } from '../src/frontmatter.js'
+import { parseMarkdown, stringValue } from '../src/frontmatter.js'
 
 describe('write & frontmatter preservation', () => {
   it('writes files atomically without corruption', () => {
@@ -22,6 +22,61 @@ describe('write & frontmatter preservation', () => {
     expect(readFileSync(filePath, 'utf8')).toBe(newContent)
 
     rmSync(dir, { recursive: true, force: true })
+  })
+
+  it('preserves literal block scalars across a rewrite', () => {
+    const raw = `---
+title: Block scalars
+description: |
+  First line.
+  Second line.
+summary: >-
+  Folded text that becomes
+  one paragraph.
+---
+Body.`
+
+    const parsed = parseMarkdown(raw)
+    expect(stringValue(parsed.frontmatter['description']!)).toBe('First line.\nSecond line.\n')
+    expect(stringValue(parsed.frontmatter['summary']!)).toBe(
+      'Folded text that becomes one paragraph.',
+    )
+
+    const rendered = renderNote({ frontmatter: parsed.frontmatter }, parsed.body)
+    const roundtripped = parseMarkdown(rendered)
+
+    expect(stringValue(roundtripped.frontmatter['description']!)).toBe(
+      'First line.\nSecond line.\n',
+    )
+    expect(stringValue(roundtripped.frontmatter['summary']!)).toBe(
+      'Folded text that becomes one paragraph.',
+    )
+    expect(roundtripped.body).toBe('Body.')
+  })
+
+  it('keeps the original frontmatter block when only the body changes', () => {
+    const raw = `---
+# this comment must survive
+title: Keep me
+tags:
+  - one
+---
+Old body.`
+
+    const parsed = parseMarkdown(raw)
+    const rendered = renderNote(
+      {
+        frontmatter: parsed.frontmatter,
+        frontmatterRaw: parsed.frontmatterRaw,
+        frontmatterCanonical: renderFrontmatter(parsed.frontmatter),
+      },
+      'New body.',
+    )
+
+    expect(rendered).toContain('# this comment must survive')
+    expect(rendered).toContain('tags:\n  - one')
+    expect(rendered).toContain('New body.')
+    expect(rendered).not.toContain('Old body.')
   })
 
   it('preserves nested mappings and arrays in frontmatter', () => {
@@ -49,6 +104,17 @@ Body text here.`
     })
     expect(roundtripped.frontmatter['aliases']).toBeDefined()
     expect(roundtripped.frontmatter['meta']).toBeDefined()
+    const authors = roundtripped.frontmatter['authors']
+    expect(authors?.kind).toBe('array')
+    if (authors?.kind === 'array') {
+      expect(authors.value[0]).toEqual({
+        kind: 'mapping',
+        value: {
+          name: { kind: 'string', value: 'Alice' },
+          role: { kind: 'string', value: 'Admin' },
+        },
+      })
+    }
     expect(roundtripped.body.trim()).toBe('Body text here.')
   })
 })

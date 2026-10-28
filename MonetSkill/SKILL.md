@@ -47,6 +47,17 @@ To open the vault in the desktop app:
 monet open
 ```
 
+## Backups
+
+Before a bulk edit, write a snapshot outside the vault:
+
+```sh
+monet backup --keep 10
+```
+
+The default destination is `~/.local/share/monet/backups`; `--output` chooses
+another folder. A vault is a plain folder, so Git or any backup tool works too.
+
 ## Reading notes
 
 ```sh

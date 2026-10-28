@@ -48,6 +48,18 @@ Para abrir la bóveda en la app de escritorio:
 monet open
 ```
 
+## Copias de seguridad
+
+Antes de una edición masiva, escribe una copia fuera de la bóveda:
+
+```sh
+monet backup --keep 10
+```
+
+El destino predeterminado es `~/.local/share/monet/backups`; `--output` elige
+otra carpeta. Una bóveda es una carpeta normal, así que Git o cualquier
+herramienta de copia también funciona.
+
 ## Leer notas
 
 ```sh

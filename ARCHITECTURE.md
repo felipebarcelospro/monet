@@ -29,7 +29,8 @@ points:
 Responsibilities:
 
 - **Scanning** — `Vault.open` walks a folder, reads `.md` files, parses YAML
-  frontmatter and builds a `VaultIndex`.
+  frontmatter and builds a `VaultIndex`. Symlinks are not followed, so a link
+  cannot pull a note from outside the vault into the index.
 - **Resolution** — `LinkResolver` follows Obsidian rules: case-insensitive,
   optional `.md`, aliases, closest folder, duplicate titles.
 - **Index** — notes by id/path/title, outgoing and incoming links, unresolved
@@ -37,7 +38,9 @@ Responsibilities:
 - **Search** — fuzzy title and body search with ranking.
 - **Graph** — deterministic nodes and edges, shared by the app and CLI.
 - **Writes** — `renderNote` / `writeNote` keep frontmatter and body in a known
-  shape; no note is rewritten unless it must be.
+  shape; no note is rewritten unless it must be. Every path is checked against
+  the vault root, and the original frontmatter block is reused when only the
+  body changed, so comments and formatting survive.
 
 The same fixture (`Fixtures/vault`) and parity checks keep the TypeScript
 engine honest across clients.
@@ -93,17 +96,22 @@ The renderer receives summaries only. A note body is read on demand
 ### Saving
 
 The store owns the text. Typing updates the store immediately and schedules a
-debounced save (about 550 ms). The main process writes the file and the file
-watcher sees the change; a short quiet window prevents the watcher from
-echoing the write back into the editor. External edits (another app, a sync
-tool) arrive as `note:changed` and update an editor that is not dirty.
+debounced save (about 550 ms). Every note carries a content revision — a short
+hash of the bytes that were read. A save sends that revision with the body; if
+the file on disk no longer matches, the write is refused and the window keeps
+the unsaved text, instead of silently replacing an edit made by the CLI or an
+agent. The main process writes the file and the file watcher sees the change;
+a short quiet window prevents the watcher from echoing the write back into the
+editor. External edits (another app, a sync tool) arrive as `note:changed` and
+update an editor that is not dirty.
 
 ### Assets
 
 The renderer never copies file bytes over IPC. The main process registers a
 privileged scheme, `monet://asset/<vault-relative-path>`, and serves files with
-the correct content type. The handler resolves the path against the vault root
-and refuses anything outside it. Images, video, audio and PDFs are streamed by
+the correct content type. The handler resolves the path against the vault root,
+checks the real path, and refuses anything outside it — including a symlink
+inside the vault that points elsewhere. Images, video, audio and PDFs are streamed by
 Chromium's own decoders.
 
 ### Markdown

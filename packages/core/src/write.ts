@@ -85,6 +85,17 @@ function renderYAMLNode(value: YAMLValue, indentLevel: number): string {
   return `${scalarToText(value)}`
 }
 
+/** Renders a string as a YAML literal block scalar. */
+function renderBlockScalar(value: string, indentLevel: number): string {
+  const trailing = value.match(/\n*$/u)?.[0].length ?? 0
+  const body = trailing > 0 ? value.slice(0, -trailing) : value
+  const marker = trailing === 0 ? '|-' : trailing > 1 ? '|+' : '|'
+  const spaces = '  '.repeat(indentLevel + 1)
+  const lines = body.split('\n').map((line) => `${spaces}${line}`)
+  if (trailing > 1) for (let index = 1; index < trailing; index += 1) lines.push('')
+  return `${marker}\n${lines.join('\n')}\n`
+}
+
 /** Renders the frontmatter mapping. */
 export function renderFrontmatter(frontmatter: Record<string, YAMLValue>): string {
   const keys = Object.keys(frontmatter).sort()
@@ -93,6 +104,10 @@ export function renderFrontmatter(frontmatter: Record<string, YAMLValue>): strin
   let output = '---\n'
   for (const key of keys) {
     const value = frontmatter[key]!
+    if (value.kind === 'string' && value.value.includes('\n')) {
+      output += `${key}: ${renderBlockScalar(value.value, 0)}`
+      continue
+    }
     if (value.kind === 'array') {
       output += `${key}:`
       const rendered = renderYAMLNode(value, 1)
@@ -111,11 +126,24 @@ export function renderFrontmatter(frontmatter: Record<string, YAMLValue>): strin
   return output
 }
 
-/** Renders a note back to its on-disk representation. */
-export function renderNote(note: Pick<Note, 'frontmatter'>, body: string): string {
-  const frontmatter = renderFrontmatter(note.frontmatter)
+/**
+ * Renders a note back to its on-disk representation.
+ *
+ * When the parsed frontmatter still matches what was read, the original block
+ * is reused verbatim: comments, key order and formatting survive a body-only
+ * edit. Once a property changes, the block is rendered from the values.
+ */
+export function renderNote(
+  note: Pick<Note, 'frontmatter' | 'frontmatterRaw' | 'frontmatterCanonical'>,
+  body: string,
+): string {
+  const canonical = renderFrontmatter(note.frontmatter)
+  const frontmatter =
+    note.frontmatterRaw && note.frontmatterCanonical === canonical ? note.frontmatterRaw : canonical
   if (frontmatter.length === 0) return body
-  return `${frontmatter}\n${body.replace(/^\n+/u, '')}`
+  // The block already ends with `---\n`; do not add a second newline, or
+  // every save would grow a blank line between the frontmatter and the body.
+  return `${frontmatter}${body.replace(/^\n+/u, '')}`
 }
 
 /** Builds a vault-relative path for a new note. */

@@ -1,10 +1,11 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { parseMarkdown, stringList } from '../src/frontmatter.js'
+import { isSafeRelativePath } from '../src/vault.js'
 import { Vault } from '../src/vault.js'
 
 let root = ''
@@ -41,6 +42,35 @@ beforeAll(() => {
 
 afterAll(() => {
   rmSync(root, { recursive: true, force: true })
+})
+
+describe('vault path safety', () => {
+  it('accepts paths inside the vault', () => {
+    expect(isSafeRelativePath('Notes/Plan.md')).toBe(true)
+    expect(isSafeRelativePath('Plan.md')).toBe(true)
+  })
+
+  it('does not follow a symlink that leaves the vault', () => {
+    const outsideDirectory = mkdtempSync(join(tmpdir(), 'monet-outside-'))
+    const outside = join(outsideDirectory, 'outside.md')
+    writeFileSync(outside, '# Outside\n', 'utf8')
+    const link = join(root, 'escape.md')
+    symlinkSync(outside, link)
+
+    const vault = Vault.open(root)
+    expect(vault.index.notes.some((note) => note.relativePath === 'escape.md')).toBe(false)
+    expect(() => vault.absolutePath('escape.md')).toThrow(/Unsafe vault path/)
+
+    rmSync(link, { force: true })
+    rmSync(outsideDirectory, { recursive: true, force: true })
+  })
+
+  it('rejects absolute and parent paths', () => {
+    expect(isSafeRelativePath('/tmp/Plan.md')).toBe(false)
+    expect(isSafeRelativePath('../Plan.md')).toBe(false)
+    expect(isSafeRelativePath('Notes/../../Plan.md')).toBe(false)
+    expect(isSafeRelativePath('')).toBe(false)
+  })
 })
 
 describe('frontmatter', () => {

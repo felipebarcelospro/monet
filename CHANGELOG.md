@@ -37,6 +37,9 @@ an MCP server.
   the app. Human-readable output plus `--format json|yaml|md|jsonl`.
 - **Vault management** with `monet vault list`, `monet vault current` and
   `monet vault use`, sharing one configuration with the app.
+- **Local snapshots** with `monet backup`, outside the vault, with retention.
+- **Search** with accent folding, multi-word matching, fuzzy titles and body
+  excerpts; no model or network required.
 - **MCP server** (`monet --mcp`) and agent skill installation
   (`monet mcp add`, `monet skills add`) in English, Portuguese and Spanish.
 - **Localisation** for English, Brazilian Portuguese and Spanish across the
@@ -50,6 +53,13 @@ an MCP server.
 
 - Electron renderer with `contextIsolation`, `sandbox` and no Node integration.
 - Vault files served through a path-confined `monet://asset` protocol.
+- Every write resolves against the vault root and rejects absolute paths and
+  `..` segments; the app, CLI and MCP share the same guard.
+- Note writes carry a content revision. The app and the CLI refuse to
+  overwrite a note that changed on disk after it was read, so an agent edit is
+  never silently replaced by a stale window.
+- Multiline frontmatter block scalars (`|`, `>`, chomping) are parsed and
+  written back; a body-only save preserves the original frontmatter block.
 - The vault is documented as trusted input: raw HTML is rendered by design.
 
 [Unreleased]: https://github.com/felipebarcelospro/monet/compare/v0.1.0...HEAD

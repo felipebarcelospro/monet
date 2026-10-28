@@ -19,9 +19,11 @@ import {
   VaultIndex,
   buildGraph,
   folderOf,
+  isSafeRelativePath,
   parseNote,
   readNotes,
   renderNote,
+  revisionOf,
   removeAppLock,
   sanitizeTitle,
   uniqueNotePath,
@@ -229,9 +231,18 @@ export class VaultService {
     return this.document(note)
   }
 
-  /** Writes the body of a note. */
-  write(id: string, body: string): WriteResult {
+  /** Writes the body of a note, refusing to clobber an external edit. */
+  write(id: string, body: string, expectedRevision?: string): WriteResult {
     const note = this.requireNote(id)
+    const absolute = this.requireVault().absolutePath(note.relativePath)
+
+    if (expectedRevision && existsSync(absolute)) {
+      const current = revisionOf(readFileSync(absolute, 'utf8'))
+      if (current !== expectedRevision) {
+        throw new Error('NOTE_CONFLICT: this note changed on disk')
+      }
+    }
+
     const before = (this.index.outgoing.get(id) ?? []).join('\u0000')
     const contents = renderNote(note, body)
     this.writeFile(note.relativePath, contents)
@@ -245,14 +256,22 @@ export class VaultService {
     return {
       summary: this.summary(updated ?? note),
       modifiedAt: updated?.modifiedAt ?? Date.now(),
+      revision: (updated ?? note).revision,
     }
   }
 
   /** Creates a note and returns it with the refreshed snapshot. */
   create(input: CreateNoteInput): { document: NoteDocument; snapshot: VaultSnapshot } {
-    const root = this.requireVault().root
+    const vault = this.requireVault()
+    const root = vault.root
     const title = (input.title ?? 'Untitled').trim() || 'Untitled'
+    if (input.folder !== undefined && !isSafeRelativePath(input.folder)) {
+      throw new Error('A folder must stay inside the vault')
+    }
     const relativePath = uniqueNotePath(root, title, input.folder)
+    if (!isSafeRelativePath(relativePath)) {
+      throw new Error('A note path must stay inside the vault')
+    }
     const frontmatter: Record<string, YAMLValue> = {
       created: { kind: 'string', value: new Date().toISOString().slice(0, 10) },
       type: { kind: 'string', value: 'note' },
@@ -264,7 +283,7 @@ export class VaultService {
       }
     }
     const contents = renderNote({ frontmatter }, input.body ?? '')
-    const absolute = join(root, relativePath)
+    const absolute = vault.absolutePath(relativePath)
     mkdirSync(dirname(absolute), { recursive: true })
     this.ignoreWrites.set(absolute, Date.now())
     writeFileSync(absolute, contents, 'utf8')
@@ -294,6 +313,9 @@ export class VaultService {
     const relativePath = uniqueNotePath(root, cleaned, folder)
     if (relativePath === note.relativePath) {
       return { document: this.document(note), snapshot: this.snapshot()! }
+    }
+    if (existsSync(join(root, relativePath))) {
+      throw new Error('A note with that name already exists')
     }
 
     const inbound = this.index.backlinks.get(id) ?? []
@@ -357,17 +379,26 @@ export class VaultService {
     id: string,
     key: string,
     value: string | string[] | null,
-  ): { summary: NoteSummary; snapshot: VaultSnapshot } {
+    expectedRevision?: string,
+  ): { summary: NoteSummary; snapshot: VaultSnapshot; revision: string } {
     const note = this.requireNote(id)
-    const frontmatter = { ...note.frontmatter }
+    const absolute = this.requireVault().absolutePath(note.relativePath)
 
+    if (expectedRevision && existsSync(absolute)) {
+      const current = revisionOf(readFileSync(absolute, 'utf8'))
+      if (current !== expectedRevision) {
+        throw new Error('NOTE_CONFLICT: this note changed on disk')
+      }
+    }
+
+    const frontmatter = { ...note.frontmatter }
     if (value === null || (Array.isArray(value) && value.length === 0)) {
       delete frontmatter[key]
     } else {
       frontmatter[key] = toYAML(value)
     }
 
-    const contents = renderNote({ frontmatter }, note.body)
+    const contents = renderNote({ ...note, frontmatter }, note.body)
     this.writeFile(note.relativePath, contents)
     const updated = this.reloadNote(note.relativePath)
     this.rebuildIndex()
@@ -376,6 +407,7 @@ export class VaultService {
     return {
       summary: this.summary(updated ?? note),
       snapshot: this.snapshot()!,
+      revision: (updated ?? note).revision,
     }
   }
 
@@ -389,12 +421,13 @@ export class VaultService {
   renameFolder(path: string, name: string): VaultSnapshot {
     const root = this.requireVault().root
     const cleaned = name.trim()
-    if (cleaned.length === 0 || /[/\\:]/u.test(cleaned)) {
+    if (cleaned.length === 0 || cleaned === '.' || cleaned === '..' || /[/\\:]/u.test(cleaned)) {
       throw new Error('A folder name cannot be empty or contain slashes')
     }
 
     const parent = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''
     const target = parent.length > 0 ? `${parent}/${cleaned}` : cleaned
+    if (!isSafeRelativePath(target)) throw new Error('A folder must stay inside the vault')
     if (target === path) return this.snapshot()!
     if (existsSync(join(root, target))) {
       throw new Error('A folder with that name already exists')
@@ -472,8 +505,7 @@ export class VaultService {
 
   /** Writes a file and remembers that the watcher should ignore the event. */
   private writeFile(relativePath: string, contents: string): void {
-    const root = this.requireVault().root
-    const absolute = join(root, relativePath)
+    const absolute = this.requireVault().absolutePath(relativePath)
     this.ignoreWrites.set(absolute, Date.now())
     atomicWriteFileSync(absolute, contents)
   }
@@ -501,6 +533,7 @@ export class VaultService {
       title: note.title,
       frontmatter: plainFrontmatter(note.frontmatter),
       body: note.body,
+      revision: note.revision,
       modifiedAt: note.modifiedAt,
       createdAt: note.createdAt ?? note.modifiedAt,
     }

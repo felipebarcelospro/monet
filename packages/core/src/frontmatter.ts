@@ -18,6 +18,8 @@ export type YAMLValue =
 /** A parsed Markdown document split into frontmatter and body. */
 export interface MarkdownDocument {
   frontmatter: Record<string, YAMLValue>
+  /** The original frontmatter block, delimiters included. */
+  frontmatterRaw: string
   body: string
   raw: string
 }
@@ -112,6 +114,14 @@ export function parseScalar(raw: string): YAMLValue {
   const value = raw.trim()
   if (value.length === 0) return { kind: 'null' }
   if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
+    // Block scalar expansion and JSON quoting both produce a double-quoted
+    // scalar. Decode the escapes so a multi-line value survives a rewrite.
+    try {
+      const decoded = JSON.parse(value) as unknown
+      if (typeof decoded === 'string') return { kind: 'string', value: decoded }
+    } catch {
+      // Not JSON syntax; fall through to the YAML unquote.
+    }
     return { kind: 'string', value: unquote(value) }
   }
   if (value.startsWith("'") && value.endsWith("'") && value.length >= 2) {
@@ -225,6 +235,23 @@ function parseMappingBlock(
       ) {
         const item = lines[state.index]!.text.slice(1).trim()
         state.index += 1
+
+        // `- name: Alice` followed by indented `role: Admin` is a mapping
+        // item, not the string "name: Alice". Preserve it as one.
+        if (/^[A-Za-z0-9_.-]+:/u.test(item)) {
+          const separator = item.indexOf(':')
+          const firstKey = item.slice(0, separator).trim()
+          const firstValue = item.slice(separator + 1).trim()
+          const value: Record<string, YAMLValue> = {
+            [firstKey]: parseScalarOrSequence(firstValue),
+          }
+          if (state.index < lines.length && lines[state.index]!.indent > sequenceIndent) {
+            Object.assign(value, parseMappingBlock(lines, state, lines[state.index]!.indent))
+          }
+          items.push({ kind: 'mapping', value })
+          continue
+        }
+
         items.push(parseScalarOrSequence(item))
       }
       mapping[key] = { kind: 'array', value: items }
@@ -234,6 +261,84 @@ function parseMappingBlock(
   }
 
   return mapping
+}
+
+/**
+ * Expands YAML block scalars (`key: |`, `key: >`, with optional chomping)
+ * into a single quoted scalar.
+ *
+ * The rest of the frontmatter parser works line by line and intentionally
+ * ignores indented continuation lines. Without this pass, `description: |`
+ * would be read as the literal string "|" and the following lines would be
+ * dropped on the next write.
+ */
+function expandBlockScalars(lines: string[]): string[] {
+  const output: string[] = []
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!
+    const match = /^(\s*)([^#][^:]*?):\s*([|>])([+-]?)\s*(?:#.*)?$/u.exec(line)
+    if (!match) {
+      output.push(line)
+      continue
+    }
+
+    const indent = (match[1] ?? '').length
+    const key = (match[2] ?? '').trim()
+    const style = match[3] ?? '|'
+    const chomping = match[4] ?? ''
+
+    const block: string[] = []
+    let cursor = index + 1
+    while (cursor < lines.length) {
+      const candidate = lines[cursor]!
+      if (candidate.trim().length === 0) {
+        block.push('')
+        cursor += 1
+        continue
+      }
+      const candidateIndent = candidate.length - candidate.trimStart().length
+      if (candidateIndent <= indent) break
+      block.push(candidate)
+      cursor += 1
+    }
+
+    const contentIndent = block
+      .filter((entry) => entry.trim().length > 0)
+      .reduce((min, entry) => Math.min(min, entry.length - entry.trimStart().length), Infinity)
+    const stripped = block.map((entry) =>
+      Number.isFinite(contentIndent) ? entry.slice(Math.min(contentIndent, entry.length)) : entry,
+    )
+
+    let value = style === '|' ? stripped.join('\n') : foldBlock(stripped)
+    if (chomping === '-') value = value.replace(/\n+$/u, '')
+    else if (chomping === '+') {
+      // Keep the block's trailing newlines as written.
+      if (!value.endsWith('\n')) value += '\n'
+    } else {
+      value = value.replace(/\n+$/u, '')
+      if (value.length > 0) value += '\n'
+    }
+
+    output.push(`${match[1] ?? ''}${key}: ${JSON.stringify(value)}`)
+    index = cursor - 1
+  }
+
+  return output
+}
+
+/** Turns the physical lines of a folded (`>`) block into its value. */
+function foldBlock(lines: string[]): string {
+  let output = ''
+  for (const line of lines) {
+    if (line.length === 0) {
+      output += '\n'
+      continue
+    }
+    if (output.length > 0 && !output.endsWith('\n')) output += ' '
+    output += line
+  }
+  return output
 }
 
 /** Parses the lines of a frontmatter block. */
@@ -259,7 +364,7 @@ export function parseMarkdown(raw: string): MarkdownDocument {
   const lines = normalized.split('\n')
 
   if (lines[0]?.trim() !== '---') {
-    return { frontmatter: {}, body: normalized, raw }
+    return { frontmatter: {}, frontmatterRaw: '', body: normalized, raw }
   }
 
   let closing = -1
@@ -273,7 +378,8 @@ export function parseMarkdown(raw: string): MarkdownDocument {
     throw new FrontmatterError('Unterminated frontmatter block')
   }
 
-  const frontmatter = parseFrontmatterBlock(lines.slice(1, closing))
+  const frontmatter = parseFrontmatterBlock(expandBlockScalars(lines.slice(1, closing)))
+  const frontmatterRaw = `${lines.slice(0, closing + 1).join('\n')}\n`
   const body = lines.slice(closing + 1).join('\n')
-  return { frontmatter, body, raw }
+  return { frontmatter, frontmatterRaw, body, raw }
 }
