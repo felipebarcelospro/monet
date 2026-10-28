@@ -30,6 +30,18 @@ The installer picks the right build for your system, verifies the SHA-256
 checksum and installs to `~/.local/bin` — no Node.js needed. Set
 `MONET_INSTALL_DIR` to install somewhere else.
 
+**Homebrew:**
+
+```sh
+brew install felipebarcelospro/tap/monet
+```
+
+**npm** (any platform, needs Node ≥ 22):
+
+```sh
+npm install -g @monet-ai/cli
+```
+
 Then point it at your notes:
 
 ```sh
@@ -242,6 +254,12 @@ Prebuilt installers are attached to each
 | macOS (Intel) | `Monet-<version>-x64-mac.dmg` |
 | Windows | `Monet-<version>-x64-win.exe` |
 | Linux | `Monet-<version>-<arch>-linux.AppImage` |
+
+The desktop app is also on Homebrew:
+
+```sh
+brew install --cask felipebarcelospro/tap/monet
+```
 
 The builds are **not signed**. On macOS, right-click the app and choose
 **Open** the first time (or use *System Settings → Privacy & Security → Open
