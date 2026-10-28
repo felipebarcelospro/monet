@@ -13,8 +13,11 @@ mac:
   category: public.app-category.productivity
   darkModeSupport: true
   target:
-    - target: dir
     - target: dmg
+      arch: [x64, arm64]
+    - target: zip
+      arch: [x64, arm64]
+  artifactName: Monet-${version}-${arch}-mac.${ext}
   icon: assets/icon.icns
   # The public builds are not signed or notarised. A local Apple identity, when
   # present, must not be picked up by accident.
@@ -26,11 +29,16 @@ linux:
   category: Utility
   target:
     - target: AppImage
-    - target: tar.gz
+      arch: [x64, arm64]
+    - target: deb
+      arch: [x64, arm64]
+  artifactName: Monet-${version}-${arch}-linux.${ext}
   icon: assets/icon.png
 win:
   target:
     - target: nsis
+      arch: [x64]
     - target: zip
+      arch: [x64]
+  artifactName: Monet-${version}-${arch}-win.${ext}
   icon: assets/icon.ico
-

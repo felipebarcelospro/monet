@@ -231,6 +231,26 @@ vaults you trust. See [SECURITY.md](SECURITY.md).
 
 ## Desktop application
 
+### Download
+
+Prebuilt installers are attached to each
+[release](https://github.com/felipebarcelospro/monet/releases/latest):
+
+| Platform | File |
+|---|---|
+| macOS (Apple silicon) | `Monet-<version>-arm64-mac.dmg` |
+| macOS (Intel) | `Monet-<version>-x64-mac.dmg` |
+| Windows | `Monet-<version>-x64-win.exe` |
+| Linux | `Monet-<version>-<arch>-linux.AppImage` |
+
+The builds are **not signed**. On macOS, right-click the app and choose
+**Open** the first time (or use *System Settings → Privacy & Security → Open
+Anyway*). On Windows, SmartScreen offers *More info → Run anyway*. Nothing is
+hidden about it — the installers are produced from this repository by the
+Desktop Release workflow, and building from source is always an option.
+
+### Features
+
 - **Three columns** — sidebar (folders, tags, favourites), note list, editor,
   with an inspector for properties, backlinks, outgoing links and the outline.
 - **Editor** — CodeMirror 6, wikilink autocomplete, live blocks, dirty-state

@@ -1,0 +1,66 @@
+name: Desktop Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: desktop-release
+  cancel-in-progress: false
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            args: --mac
+          - os: windows-latest
+            args: --win
+          - os: ubuntu-latest
+            args: --linux
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.16.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the app bundles
+        run: pnpm --filter @monet/app build
+
+      - name: Package the installers
+        run: pnpm --filter @monet/app exec electron-builder ${{ matrix.args }}
+        env:
+          # Public builds stay unsigned; no signing identity is configured.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Attach the installers to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          files=""
+          for pattern in '*.dmg' '*-mac.zip' '*.exe' '*-win.zip' '*.AppImage' '*.deb'; do
+            for file in build/electron/$pattern; do
+              [ -e "$file" ] && files="$files $file"
+            done
+          done
+          [ -n "$files" ] || { echo "No installers were produced"; exit 1; }
+          gh release view "$tag" >/dev/null 2>&1 || \
+            gh release create "$tag" --title "Monet ${tag#v}" --notes "See the assets below."
+          gh release upload "$tag" $files --clobber

@@ -9,6 +9,9 @@
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
     "package": "node scripts/package.mjs",
+    "package:mac": "node scripts/build.mjs && pnpm exec electron-builder --mac",
+    "package:win": "node scripts/build.mjs && pnpm exec electron-builder --win nsis zip",
+    "package:linux": "node scripts/build.mjs && pnpm exec electron-builder --linux AppImage deb",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
