@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Read the contributing guide
-    url: https://github.com/monet-app/monet/blob/main/CONTRIBUTING.md
+    url: https://github.com/felipebarcelospro/monet/blob/main/CONTRIBUTING.md
     about: Setup, scripts, tests and the pull request workflow.
   - name: Report a security vulnerability
-    url: https://github.com/monet-app/monet/security/advisories/new
+    url: https://github.com/felipebarcelospro/monet/security/advisories/new
     about: Please report vulnerabilities privately, never in a public issue.

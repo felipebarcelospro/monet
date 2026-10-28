@@ -20,7 +20,7 @@ Use GitHub's private vulnerability reporting:
 3. Include the version, the platform, the steps to reproduce, and the impact.
 
 Direct link:
-[https://github.com/monet-app/monet/security/advisories/new](https://github.com/monet-app/monet/security/advisories/new)
+[https://github.com/felipebarcelospro/monet/security/advisories/new](https://github.com/felipebarcelospro/monet/security/advisories/new)
 
 You can expect an acknowledgement within a few days. If the report is valid, a
 fix and an advisory will be prepared; credit is given unless you ask to remain

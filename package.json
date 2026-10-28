@@ -28,13 +28,13 @@
   },
   "license": "MIT",
   "author": "Monet contributors",
-  "homepage": "https://github.com/monet-app/monet#readme",
+  "homepage": "https://github.com/felipebarcelospro/monet#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/monet-app/monet.git"
+    "url": "git+https://github.com/felipebarcelospro/monet.git"
   },
   "bugs": {
-    "url": "https://github.com/monet-app/monet/issues"
+    "url": "https://github.com/felipebarcelospro/monet/issues"
   },
   "keywords": [
     "markdown",

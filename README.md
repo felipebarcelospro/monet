@@ -2,7 +2,7 @@
 
 **A quiet, local-first Markdown vault with an interactive graph, a rich editor, a CLI and an MCP server for AI agents.**
 
-[![CI](https://github.com/monet-app/monet/actions/workflows/ci.yml/badge.svg)](https://github.com/monet-app/monet/actions/workflows/ci.yml)
+[![CI](https://github.com/felipebarcelospro/monet/actions/workflows/ci.yml/badge.svg)](https://github.com/felipebarcelospro/monet/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522-3c873a)](https://nodejs.org)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -118,7 +118,7 @@ monet note list
 ```
 
 Prebuilt CLI binaries for macOS, Linux and Windows are published on the
-[releases page](https://github.com/monet-app/monet/releases) when a `v*` tag
+[releases page](https://github.com/felipebarcelospro/monet/releases) when a `v*` tag
 is pushed.
 
 ---

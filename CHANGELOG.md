@@ -52,5 +52,5 @@ an MCP server.
 - Vault files served through a path-confined `monet://asset` protocol.
 - The vault is documented as trusted input: raw HTML is rendered by design.
 
-[Unreleased]: https://github.com/monet-app/monet/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/monet-app/monet/releases/tag/v0.1.0
+[Unreleased]: https://github.com/felipebarcelospro/monet/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/felipebarcelospro/monet/releases/tag/v0.1.0

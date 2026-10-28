@@ -18,7 +18,7 @@ issue.
   Spanish. Missing strings and awkward wording are valid pull requests.
 
 Good first issues are labelled
-[`good first issue`](https://github.com/monet-app/monet/labels/good%20first%20issue).
+[`good first issue`](https://github.com/felipebarcelospro/monet/labels/good%20first%20issue).
 
 ---
 
@@ -39,7 +39,7 @@ Node and pnpm.
 ## Setup
 
 ```sh
-git clone https://github.com/monet-app/monet.git
+git clone https://github.com/felipebarcelospro/monet.git
 cd monet
 pnpm install
 pnpm seed                     # creates ExampleVault/
