@@ -33,11 +33,11 @@ export function repositoryRoot(): string | undefined {
   const root = packageRoot()
   if (!root) return undefined
   const candidate = resolve(root, '..', '..')
-  return existsSync(join(candidate, 'Package.swift')) ? candidate : undefined
+  return existsSync(join(candidate, 'pnpm-workspace.yaml')) ? candidate : undefined
 }
 
 /**
- * The candidate locations of the Monet application bundle.
+ * The candidate locations of the Monet application bundle or executable.
  */
 export function appBundleCandidates(): string[] {
   const candidates: string[] = []
@@ -45,13 +45,36 @@ export function appBundleCandidates(): string[] {
   const override = process.env['MONET_APP_BUNDLE']
   if (override && override.length > 0) candidates.push(resolve(override))
 
-  candidates.push('/Applications/Monet.app')
-  candidates.push(join(process.env['HOME'] ?? '', 'Applications', 'Monet.app'))
+  const platform = process.platform
 
-  // The bundle produced by `scripts/build-app.sh`.
-  candidates.push(join(process.cwd(), 'build', 'Monet.app'))
+  if (platform === 'darwin') {
+    candidates.push('/Applications/Monet.app')
+    candidates.push(join(process.env['HOME'] ?? '', 'Applications', 'Monet.app'))
+    candidates.push(join(process.cwd(), 'build', 'Monet.app'))
+  } else if (platform === 'win32') {
+    const localAppData =
+      process.env['LOCALAPPDATA'] ?? join(process.env['USERPROFILE'] ?? '', 'AppData', 'Local')
+    candidates.push(join(localAppData, 'Programs', 'Monet', 'Monet.exe'))
+    candidates.push(join(process.cwd(), 'build', 'electron', 'win-unpacked', 'Monet.exe'))
+  } else {
+    candidates.push('/usr/bin/monet-app')
+    candidates.push('/usr/local/bin/monet-app')
+    candidates.push(join(process.env['HOME'] ?? '', '.local', 'bin', 'monet-app'))
+    candidates.push(join(process.cwd(), 'build', 'electron', 'linux-unpacked', 'monet'))
+  }
+
   const root = repositoryRoot()
-  if (root) candidates.push(join(root, 'build', 'Monet.app'))
+  if (root) {
+    if (platform === 'darwin') {
+      candidates.push(join(root, 'build', 'Monet.app'))
+      candidates.push(join(root, 'build', 'electron', 'mac-arm64', 'Monet.app'))
+      candidates.push(join(root, 'build', 'electron', 'mac', 'Monet.app'))
+    } else if (platform === 'win32') {
+      candidates.push(join(root, 'build', 'electron', 'win-unpacked', 'Monet.exe'))
+    } else {
+      candidates.push(join(root, 'build', 'electron', 'linux-unpacked', 'monet'))
+    }
+  }
 
   return candidates
 }

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 /** The sample vault used by the MCP contract test. */
-const VAULT = fileURLToPath(new URL('./fixtures/vault', import.meta.url))
+const VAULT = fileURLToPath(new URL('../../../Fixtures/vault', import.meta.url))
 
 /** A single JSON-RPC request. */
 interface Request {

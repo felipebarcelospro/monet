@@ -1,0 +1,50 @@
+{
+  "name": "@monet/core",
+  "version": "0.1.0",
+  "type": "module",
+  "private": false,
+  "description": "The Monet vault engine: Markdown, wikilinks, backlinks, search and the link graph.",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "author": "Monet contributors",
+  "homepage": "https://github.com/monet-app/monet#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monet-app/monet.git"
+  },
+  "bugs": {
+    "url": "https://github.com/monet-app/monet/issues"
+  },
+  "keywords": [
+    "markdown",
+    "notes",
+    "vault",
+    "obsidian",
+    "backlinks",
+    "graph",
+    "search"
+  ]
+}

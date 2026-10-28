@@ -1,0 +1,36 @@
+appId: com.monet.app
+productName: Monet
+copyright: Copyright © 2026 Monet contributors
+directories:
+  output: ../../build/electron
+  buildResources: assets
+files:
+  - dist/**
+  - dist-electron/**
+  - package.json
+asar: true
+mac:
+  category: public.app-category.productivity
+  darkModeSupport: true
+  target:
+    - target: dir
+    - target: dmg
+  icon: assets/icon.icns
+  # The public builds are not signed or notarised. A local Apple identity, when
+  # present, must not be picked up by accident.
+  identity: null
+  extendInfo:
+    NSHumanReadableCopyright: Copyright © 2026 Monet contributors
+    LSMinimumSystemVersion: "13.0"
+linux:
+  category: Utility
+  target:
+    - target: AppImage
+    - target: tar.gz
+  icon: assets/icon.png
+win:
+  target:
+    - target: nsis
+    - target: zip
+  icon: assets/icon.ico
+

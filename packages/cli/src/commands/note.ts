@@ -13,8 +13,7 @@ import {
   vaultOptions,
   writeNote,
 } from '../lib/context.js'
-import { configPath, readConfig, writeConfig } from '../lib/config.js'
-import { parseLinks } from '../lib/wikilink.js'
+import { configPath, parseLinks, readConfig, selectVault, writeConfig } from '@monet/core'
 
 // ---------------------------------------------------------------------------
 // monet note new
@@ -67,7 +66,10 @@ export function runNoteNew(
 
   const frontmatter: Record<string, unknown> = {}
   if (tags.length > 0) {
-    frontmatter['tags'] = { kind: 'array', value: tags.map((tag) => ({ kind: 'string', value: tag })) }
+    frontmatter['tags'] = {
+      kind: 'array',
+      value: tags.map((tag) => ({ kind: 'string', value: tag })),
+    }
   }
   if (aliases.length > 0) {
     frontmatter['aliases'] = {
@@ -98,7 +100,11 @@ export function runNoteNew(
       cta: {
         description: messages_.get('note.created', { path: relativePath }),
         commands: [
-          { command: 'note show', args: { title: created.title }, description: 'Show the new note' },
+          {
+            command: 'note show',
+            args: { title: created.title },
+            description: 'Show the new note',
+          },
           { command: 'note list' },
         ],
       },
@@ -134,7 +140,11 @@ export const noteListOutput = z.object({
 
 /** Runs `monet note list`. */
 export function runNoteList(
-  c: CommandContext<Record<string, never>, z.output<typeof noteListOptions>, z.output<typeof noteListOutput>>,
+  c: CommandContext<
+    Record<string, never>,
+    z.output<typeof noteListOptions>,
+    z.output<typeof noteListOutput>
+  >,
 ): z.output<typeof noteListOutput> {
   const vault = openVault(c)
 
@@ -265,9 +275,7 @@ export function runNoteEdit(
   let body = found.body
   if (c.options.body !== undefined) body = c.options.body
   if (c.options.append !== undefined) {
-    body = body.endsWith('\n')
-      ? `${body}${c.options.append}\n`
-      : `${body}\n${c.options.append}\n`
+    body = body.endsWith('\n') ? `${body}${c.options.append}\n` : `${body}\n${c.options.append}\n`
   }
   if (c.options.tag && c.options.tag.length > 0) {
     const merged = new Set(found.tags.map((tag) => tag.toLowerCase()))
@@ -501,12 +509,22 @@ export const configSetOutput = z.object({
 
 /** Runs `monet config set`. */
 export function runConfigSet(
-  c: CommandContext<Record<string, never>, z.output<typeof configSetOptions>, z.output<typeof configSetOutput>>,
+  c: CommandContext<
+    Record<string, never>,
+    z.output<typeof configSetOptions>,
+    z.output<typeof configSetOutput>
+  >,
 ): z.output<typeof configSetOutput> {
+  // `vault use` and `config set --vault` write the same configuration; the
+  // only difference is that `vault use` validates the folder first.
+  if (c.options.vault !== undefined) selectVault(c.options.vault)
+
   const current = readConfig()
-  if (c.options.vault !== undefined) current.vault = c.options.vault
-  if (c.options.locale !== undefined) current.locale = c.options.locale
-  writeConfig(current)
+  if (c.options.locale !== undefined) {
+    current.locale = c.options.locale
+    writeConfig(current)
+  }
+
   return { vault: current.vault, locale: current.locale }
 }
 

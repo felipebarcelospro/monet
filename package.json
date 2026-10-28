@@ -3,16 +3,49 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Monet \u2014 a macOS Markdown vault with a 3D graph, and a CLI that speaks to the same vault.",
+  "description": "Monet — a local-first cross-platform Markdown vault with an interactive link graph, CLI and MCP server.",
   "packageManager": "pnpm@11.16.0",
   "scripts": {
-    "build": "pnpm --filter @monet/cli build",
-    "test": "pnpm --filter @monet/cli test",
-    "typecheck": "pnpm --filter @monet/cli typecheck",
+    "dev": "pnpm --filter @monet/app dev",
+    "dev:cli": "pnpm --filter @monet/cli dev",
+    "build": "pnpm --filter @monet/core build && pnpm --filter @monet/cli build && pnpm --filter @monet/app build",
+    "package": "pnpm --filter @monet/app package",
+    "test": "pnpm --filter @monet/core test && pnpm --filter @monet/cli test && pnpm --filter @monet/app test",
+    "typecheck": "pnpm --filter @monet/core typecheck && pnpm --filter @monet/cli typecheck && pnpm --filter @monet/app typecheck",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
     "seed": "pnpm --filter @monet/cli seed ExampleVault --notes 60",
-    "dev": "pnpm --filter @monet/cli dev"
+    "format:check": "biome format .",
+    "screenshots": "bash scripts/screenshot.sh",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test",
+    "release:version": "node scripts/version.mjs"
   },
   "engines": {
     "node": ">=22"
-  }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.2"
+  },
+  "license": "MIT",
+  "author": "Monet contributors",
+  "homepage": "https://github.com/monet-app/monet#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monet-app/monet.git"
+  },
+  "bugs": {
+    "url": "https://github.com/monet-app/monet/issues"
+  },
+  "keywords": [
+    "markdown",
+    "notes",
+    "vault",
+    "obsidian",
+    "electron",
+    "react",
+    "knowledge-base",
+    "pkm",
+    "mcp",
+    "cli"
+  ]
 }

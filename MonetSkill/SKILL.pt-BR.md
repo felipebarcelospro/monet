@@ -23,16 +23,23 @@ Esta skill é instalada junto com as skills geradas `monet-<command>`, que docum
   maiúsculas de minúsculas, aliases funcionam e títulos duplicados resolvem
   para o arquivo mais próximo.
 
-## Abrindo um cofre
+## Escolhendo um cofre
 
-A CLI escolhe o cofre nesta ordem: a flag `--vault`, a variável de ambiente
-`MONET_VAULT`, a configuração `monet config set --vault <caminho>` e, por
-último, o diretório atual.
+Um único cofre basta. Aponte a CLI para ele uma vez:
 
 ```sh
-monet config set --vault ~/Documents/MeuCofre
-monet note list
+monet vault use ~/Documents/MeuCofre
+monet vault current
 ```
+
+A partir daí todo comando — e o app, e o servidor MCP — usa essa pasta sem a
+flag `--vault`. `monet vault list` mostra o cofre atual e os abertos
+recentemente; `monet vault current` também diz se o caminho veio da flag, do
+ambiente, da configuração ou do diretório atual.
+
+A ordem de resolução é: `--vault`, `MONET_VAULT`, o cofre configurado e o
+diretório atual. Quando o cofre não estiver óbvio, rode `monet vault current`
+antes de ler ou escrever — nunca adivinhe um caminho.
 
 Para abrir o cofre no app macOS:
 

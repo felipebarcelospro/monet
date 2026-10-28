@@ -3,6 +3,7 @@ import { dirname } from 'node:path'
 import { Cli } from 'incur'
 
 import { config, note } from './commands/note.js'
+import { vault } from './commands/vault.js'
 import {
   backlinksArgs,
   backlinksOptions,
@@ -128,5 +129,6 @@ export const cli = Cli.create('monet', {
     run: runOpen,
   })
   .command(config)
+  .command(vault)
 
 export default cli

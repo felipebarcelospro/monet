@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
-import { parseMarkdown, stringList } from '../src/lib/frontmatter.js'
-import { parseHeadings, parseLinks, parseTags } from '../src/lib/wikilink.js'
+import { parseMarkdown, stringList } from '@monet/core'
+import { parseHeadings, parseLinks, parseTags } from '@monet/core'
 
 /** The shared fixture, parsed by the TypeScript implementation. */
 const fixtureFolder = fileURLToPath(new URL('../../../Fixtures', import.meta.url))
@@ -12,13 +12,11 @@ const markdown = readFileSync(`${fixtureFolder}/parity.md`, 'utf8')
 const expectation = JSON.parse(readFileSync(`${fixtureFolder}/parity.json`, 'utf8'))
 
 /**
- * The parity between the TypeScript and the Swift parsers.
- *
- * The Swift test in `MonetCore/Tests/MonetCoreTests/ParityTests.swift`
- * asserts exactly the same expectations against the same fixture, so a
- * change to one parser that is not mirrored in the other fails a test.
+ * The contract of the shared parser, asserted against a fixture that keeps
+ * the exact expected frontmatter, links, tags and headings. Both clients of
+ * the engine — the app and the CLI — depend on this behaviour.
  */
-describe('parity with the Swift implementation', () => {
+describe('the parser contract fixture', () => {
   it('parses the shared fixture the same way', () => {
     const document = parseMarkdown(markdown)
     const body = document.body
@@ -30,10 +28,9 @@ describe('parity with the Swift implementation', () => {
     expect(aliases ? stringList(aliases) : []).toEqual(expectation.note.aliases)
 
     const frontmatterTags = document.frontmatter['tags']
-    const tags = [
-      ...(frontmatterTags ? stringList(frontmatterTags) : []),
-      ...parseTags(body),
-    ].map((tag) => tag.replace(/^#+/u, '').trim())
+    const tags = [...(frontmatterTags ? stringList(frontmatterTags) : []), ...parseTags(body)].map(
+      (tag) => tag.replace(/^#+/u, '').trim(),
+    )
     expect([...new Set(tags)]).toEqual(expectation.note.tags)
 
     const links = parseLinks(body)

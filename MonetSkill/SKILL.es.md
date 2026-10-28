@@ -24,16 +24,23 @@ Esta skill se instala junto con las skills generadas `monet-<command>`, que docu
   distinguir mayúsculas, los alias funcionan y los títulos duplicados se
   resuelven al archivo más cercano.
 
-## Abrir una bóveda
+## Elegir una bóveda
 
-La CLI elige la bóveda en este orden: la flag `--vault`, la variable de
-entorno `MONET_VAULT`, la configuración `monet config set --vault <ruta>` y,
-por último, el directorio actual.
+Una sola bóveda es suficiente. Apunta la CLI a ella una vez:
 
 ```sh
-monet config set --vault ~/Documents/MiBoveda
-monet note list
+monet vault use ~/Documents/MiBoveda
+monet vault current
 ```
+
+A partir de ahí, cada comando —y la app, y el servidor MCP— usa esa carpeta
+sin la flag `--vault`. `monet vault list` muestra la bóveda actual y las
+abiertas recientemente; `monet vault current` también dice si la ruta vino de
+la flag, del entorno, de la configuración o del directorio actual.
+
+El orden de resolución es: `--vault`, `MONET_VAULT`, la bóveda configurada y
+el directorio actual. Cuando la bóveda no sea obvia, ejecuta
+`monet vault current` antes de leer o escribir — nunca adivines una ruta.
 
 Para abrir la bóveda en la app de macOS:
 

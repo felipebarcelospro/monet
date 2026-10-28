@@ -3,12 +3,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { afterAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { cli } from '../src/index.js'
 
 /** The sample vault used by the CLI tests. */
-const VAULT = fileURLToPath(new URL('./fixtures/vault', import.meta.url))
+const VAULT = fileURLToPath(new URL('../../../Fixtures/vault', import.meta.url))
 
 /** A writable copy of the sample vault, used by the tests that mutate it. */
 const scratch = join(mkdtempSync(join(tmpdir(), 'monet-cli-')), 'vault')
@@ -16,6 +16,27 @@ cpSync(VAULT, scratch, { recursive: true })
 
 afterAll(() => {
   rmSync(scratch, { recursive: true, force: true })
+})
+
+/** An isolated configuration, so selecting a vault never touches the user's. */
+const configDir = mkdtempSync(join(tmpdir(), 'monet-config-'))
+const originalConfig = process.env['MONET_CONFIG_DIR']
+const originalVault = process.env['MONET_VAULT']
+
+beforeEach(() => {
+  process.env['MONET_CONFIG_DIR'] = configDir
+  delete process.env['MONET_VAULT']
+})
+
+afterEach(() => {
+  if (originalConfig === undefined) delete process.env['MONET_CONFIG_DIR']
+  else process.env['MONET_CONFIG_DIR'] = originalConfig
+  if (originalVault === undefined) delete process.env['MONET_VAULT']
+  else process.env['MONET_VAULT'] = originalVault
+})
+
+afterAll(() => {
+  rmSync(configDir, { recursive: true, force: true })
 })
 
 /** Runs the CLI and captures what it writes. */
@@ -59,14 +80,7 @@ describe('monet CLI', () => {
   })
 
   it('searches the vault', async () => {
-    const { output, code } = await run([
-      'search',
-      'release',
-      '--vault',
-      VAULT,
-      '--format',
-      'json',
-    ])
+    const { output, code } = await run(['search', 'release', '--vault', VAULT, '--format', 'json'])
     expect(code).toBe(0)
     const parsed = JSON.parse(output) as { count: number; results: { title: string }[] }
     expect(parsed.count).toBeGreaterThan(0)
@@ -150,6 +164,47 @@ describe('monet CLI', () => {
     const checked = JSON.parse(check.output) as { resolved: boolean; resolvedTo: string }
     expect(checked.resolved).toBe(true)
     expect(checked.resolvedTo).toBe('Notes/Design Notes')
+  })
+
+  it('selects a vault and reuses it without --vault', async () => {
+    const chosen = await run(['vault', 'use', scratch, '--format', 'json'])
+    expect(chosen.code).toBe(0)
+    const selected = JSON.parse(chosen.output) as { path: string; notes: number }
+    expect(selected.path).toBe(scratch)
+    expect(selected.notes).toBeGreaterThan(0)
+
+    const current = await run(['vault', 'current', '--format', 'json'])
+    expect(current.code).toBe(0)
+    const info = JSON.parse(current.output) as { path: string; source: string; exists: boolean }
+    expect(info.path).toBe(scratch)
+    expect(info.source).toBe('config')
+    expect(info.exists).toBe(true)
+
+    // Every command now works without repeating --vault.
+    const list = await run(['note', 'list', '--format', 'json'])
+    expect(list.code).toBe(0)
+    expect(list.output).toContain('Release Plan')
+  })
+
+  it('lists the current vault and the recent ones', async () => {
+    await run(['vault', 'use', scratch])
+    const { output, code } = await run(['vault', 'list', '--format', 'json'])
+    expect(code).toBe(0)
+    const parsed = JSON.parse(output) as {
+      current: string
+      vaults: { path: string; current: boolean; notes: number | null }[]
+    }
+    expect(parsed.current).toBe(scratch)
+    expect(parsed.vaults[0]?.path).toBe(scratch)
+    expect(parsed.vaults[0]?.current).toBe(true)
+    expect(parsed.vaults[0]?.notes).toBeGreaterThan(0)
+  })
+
+  it('refuses a folder that does not exist', async () => {
+    const missing = join(configDir, 'not-a-vault')
+    const { output, code } = await run(['vault', 'use', missing, '--format', 'json'])
+    expect(code).toBe(1)
+    expect(output).toContain('not-a-vault')
   })
 
   it('exposes the command manifest with --llms', async () => {

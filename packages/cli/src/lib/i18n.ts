@@ -26,7 +26,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'error.linkMissing': 'No link with the target "{target}" was found.',
     'error.appRunning':
       'The Monet app is already running with this vault open (pid {pid}). Saving from the CLI may conflict with the app.',
-    'error.missingVault': 'No vault configured. Run `monet config set --vault <path>` first.',
+    'error.missingVault': 'No vault configured. Run `monet vault use <path>` first.',
+    'error.vaultNotDirectory': 'Not a folder: {path}',
+    'error.vaultUnreadable': 'The folder could not be read as a vault: {path}',
     'error.invalidFrontmatter': 'The note has malformed frontmatter: {reason}',
     'help.vault': 'Path to the vault folder',
     'help.locale': 'Locale for messages (en, pt-BR, es)',
@@ -47,7 +49,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'error.linkMissing': 'Nenhum link com o destino "{target}" foi encontrado.',
     'error.appRunning':
       'O app Monet já está rodando com este cofre aberto (pid {pid}). Salvar pela CLI pode conflitar com o app.',
-    'error.missingVault': 'Nenhum cofre configurado. Rode `monet config set --vault <caminho>` primeiro.',
+    'error.missingVault': 'Nenhum cofre configurado. Rode `monet vault use <caminho>` primeiro.',
+    'error.vaultNotDirectory': 'Isso não é uma pasta: {path}',
+    'error.vaultUnreadable': 'Não foi possível ler a pasta como cofre: {path}',
     'error.invalidFrontmatter': 'A nota tem frontmatter inválido: {reason}',
     'help.vault': 'Caminho para a pasta do cofre',
     'help.locale': 'Idioma das mensagens (en, pt-BR, es)',
@@ -68,7 +72,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'error.linkMissing': 'No se encontró ningún enlace con el destino "{target}".',
     'error.appRunning':
       'La app Monet ya está en ejecución con esta bóveda abierta (pid {pid}). Guardar desde la CLI puede entrar en conflicto con la app.',
-    'error.missingVault': 'No hay bóveda configurada. Ejecuta `monet config set --vault <ruta>` primero.',
+    'error.missingVault': 'No hay bóveda configurada. Ejecuta `monet vault use <ruta>` primero.',
+    'error.vaultNotDirectory': 'Esto no es una carpeta: {path}',
+    'error.vaultUnreadable': 'No se pudo leer la carpeta como bóveda: {path}',
     'error.invalidFrontmatter': 'La nota tiene un frontmatter inválido: {reason}',
     'help.vault': 'Ruta de la carpeta de la bóveda',
     'help.locale': 'Idioma de los mensajes (en, pt-BR, es)',

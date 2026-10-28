@@ -1,13 +1,20 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname } from 'node:path'
 
 import { z } from 'incur'
 
-import { resolveVault } from './config.js'
+import {
+  type ConcurrencyWarning,
+  type Note,
+  Vault,
+  renderNote,
+  notePath,
+  detectConcurrentApp,
+  resolveVault,
+} from '@monet/core'
+
 import { appBundleCandidates } from './paths.js'
-import { type ConcurrencyWarning, detectConcurrentApp } from './graph.js'
 import { type Locale, Messages, resolveLocale } from './i18n.js'
-import { type Note, Vault } from './vault.js'
 
 /**
  * The options every Monet command accepts.
@@ -24,11 +31,7 @@ export const vaultOptions = {
 }
 
 /** The subset of the incur run context the commands rely on. */
-export interface CommandContext<
-  Args = any,
-  Options = any,
-  Output = any,
-> {
+export interface CommandContext<Args = any, Options = any, Output = any> {
   /** The positional arguments. */
   args: Args
   /** The named options. */
@@ -42,34 +45,23 @@ export interface CommandContext<
   /** Returns a success result. */
   ok: (data: Output, meta?: { cta?: any }) => never
   /** Returns a failure result. */
-  error: (options: {
-    code: string
-    message: string
-    retryable?: boolean
-    cta?: any
-  }) => never
+  error: (options: { code: string; message: string; retryable?: boolean; cta?: any }) => never
 }
 
 /** Opens the vault the command should operate on. */
-export function openVault(context: {
-  options?: { vault?: string | undefined }
-}): Vault {
+export function openVault(context: { options?: { vault?: string | undefined } }): Vault {
   const explicit = context.options?.vault
   const path = resolveVault(explicit)
   return Vault.open(path)
 }
 
 /** The locale the command should use. */
-export function commandLocale(context: {
-  options?: { locale?: string | undefined }
-}): Locale {
+export function commandLocale(context: { options?: { locale?: string | undefined } }): Locale {
   return resolveLocale(context.options?.locale)
 }
 
 /** The message catalogue for the command. */
-export function messages(context: {
-  options?: { locale?: string | undefined }
-}): Messages {
+export function messages(context: { options?: { locale?: string | undefined } }): Messages {
   return new Messages(commandLocale(context))
 }
 
@@ -111,56 +103,11 @@ export function findNote(vault: Vault, target: string): Note | undefined {
 export function writeNote(vault: Vault, note: Note, body: string): void {
   const absolute = vault.absolutePath(note.relativePath)
   mkdirSync(dirname(absolute), { recursive: true })
-  const contents = renderNote(note, body)
-  writeFileSync(absolute, contents, 'utf8')
+  writeFileSync(absolute, renderNote(note, body), 'utf8')
 }
 
-/**
- * Renders a note back to its on-disk representation.
- */
-export function renderNote(note: Note, body: string): string {
-  let output = ''
-  const keys = Object.keys(note.frontmatter).sort()
-  if (keys.length > 0) {
-    output += '---\n'
-    for (const key of keys) {
-      const value = note.frontmatter[key]!
-      if (value.kind === 'array') {
-        output += `${key}:\n`
-        for (const item of value.value) output += `  - ${scalarToText(item)}\n`
-      } else if (value.kind === 'mapping') {
-        output += `${key}:\n`
-        for (const nestedKey of Object.keys(value.value).sort()) {
-          output += `  ${nestedKey}: ${scalarToText(value.value[nestedKey]!)}\n`
-        }
-      } else {
-        output += `${key}: ${scalarToText(value)}\n`
-      }
-    }
-    output += '---\n'
-  }
-  output += body.startsWith('\n') ? body : `\n${body}`
-  return output
-}
-
-/** Renders a scalar YAML value as text. */
-function scalarToText(value: { kind: string; value?: unknown }): string {
-  if (value.kind === 'array' || value.kind === 'mapping') return ''
-  if (value.kind === 'null') return ''
-  if (value.kind === 'bool') return value.value ? 'true' : 'false'
-  return String(value.value ?? '')
-}
-
-/**
- * Builds a vault-relative path for a new note.
- */
-export function notePath(title: string, folder?: string): string {
-  const safe = title.trim().replace(/[/\\]/gu, '-')
-  const fileName = `${safe}.md`
-  return folder && folder.trim().length > 0
-    ? `${folder.trim().replace(/^\/+|\/+$/gu, '')}/${fileName}`
-    : fileName
-}
+/** Re-exported so every command builds paths the same way. */
+export { notePath }
 
 /**
  * The absolute path of the Monet app bundle, when it is installed.

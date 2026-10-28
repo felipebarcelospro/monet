@@ -22,16 +22,24 @@ This skill is installed together with the generated `monet-<command>` skills, wh
 - Link resolution matches Obsidian: no extension needed, case-insensitive,
   aliases work, and duplicate titles resolve to the closest file.
 
-## Opening a vault
+## Choosing a vault
 
-The CLI picks the vault from, in order: the `--vault` flag, the `MONET_VAULT`
-environment variable, the `monet config set --vault <path>` setting, and
-finally the current directory.
+A single vault is all Monet needs. Point the CLI at it once:
 
 ```sh
-monet config set --vault ~/Documents/MyVault
-monet note list
+monet vault use ~/Documents/Vault
+monet vault current
 ```
+
+From then on every command — and the app, and the MCP server — uses that
+folder without a `--vault` flag. `monet vault list` shows the current vault
+and the ones opened recently; `monet vault current` also says whether the
+path came from the flag, the environment, the configuration or the current
+directory.
+
+The resolution order is: `--vault`, `MONET_VAULT`, the configured vault, the
+current directory. When the vault is not obvious, run `monet vault current`
+before reading or writing — never guess a path.
 
 To open the vault in the macOS app:
 

@@ -68,7 +68,5 @@ export function findSkillTemplateRoot(): string | undefined {
  * Reads the manifest of the authored skill template.
  */
 export function readSkillManifest(root: string): SkillTemplateManifest {
-  return JSON.parse(
-    readFileSync(join(root, 'template.json'), 'utf8'),
-  ) as SkillTemplateManifest
+  return JSON.parse(readFileSync(join(root, 'template.json'), 'utf8')) as SkillTemplateManifest
 }

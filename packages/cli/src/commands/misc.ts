@@ -11,9 +11,7 @@ import {
   vaultOptions,
   writeNote,
 } from '../lib/context.js'
-import { buildGraph } from '../lib/graph.js'
-import { SearchEngine } from '../lib/search.js'
-import { parseLinks } from '../lib/wikilink.js'
+import { SearchEngine, buildGraph, parseLinks } from '@monet/core'
 
 /** The arguments of `monet search`. */
 export const searchArgs = z.object({
@@ -43,7 +41,11 @@ export const searchOutput = z.object({
 
 /** Runs `monet search`. */
 export function runSearch(
-  c: CommandContext<z.output<typeof searchArgs>, z.output<typeof searchOptions>, z.output<typeof searchOutput>>,
+  c: CommandContext<
+    z.output<typeof searchArgs>,
+    z.output<typeof searchOptions>,
+    z.output<typeof searchOutput>
+  >,
 ): z.output<typeof searchOutput> {
   const vault = openVault(c)
   const engine = new SearchEngine(vault.index)
@@ -112,9 +114,7 @@ export function runLinkCreate(
     })
   }
 
-  const linkText = c.options.text
-    ? `[[${target.title}|${c.options.text}]]`
-    : `[[${target.title}]]`
+  const linkText = c.options.text ? `[[${target.title}|${c.options.text}]]` : `[[${target.title}]]`
   if (source.body.includes(linkText)) {
     return c.error({
       code: 'LINK_EXISTS',
@@ -182,9 +182,7 @@ export function runLinkCheck(
   }
 
   const links = parseLinks(source.body)
-  const match = links.find(
-    (link) => link.target.toLowerCase() === c.options.target.toLowerCase(),
-  )
+  const match = links.find((link) => link.target.toLowerCase() === c.options.target.toLowerCase())
   if (!match) {
     return c.error({
       code: 'LINK_MISSING',
@@ -285,7 +283,11 @@ export const graphOutput = z.object({
 
 /** Runs `monet graph`. */
 export function runGraph(
-  c: CommandContext<Record<string, never>, z.output<typeof graphOptions>, z.output<typeof graphOutput>>,
+  c: CommandContext<
+    Record<string, never>,
+    z.output<typeof graphOptions>,
+    z.output<typeof graphOutput>
+  >,
 ): z.output<typeof graphOutput> {
   const vault = openVault(c)
 
@@ -295,9 +297,7 @@ export function runGraph(
   const allowed = new Set(vault.index.notesTagged(c.options.tag).map((note) => note.id))
   return {
     nodes: built.nodes.filter((node) => allowed.has(node.id)),
-    edges: built.edges.filter(
-      (edge) => allowed.has(edge.source) && allowed.has(edge.target),
-    ),
+    edges: built.edges.filter((edge) => allowed.has(edge.source) && allowed.has(edge.target)),
   }
 }
 
@@ -320,7 +320,11 @@ export const tagsOutput = z.object({
 
 /** Runs `monet tags`. */
 export function runTags(
-  c: CommandContext<Record<string, never>, z.output<typeof tagsOptions>, z.output<typeof tagsOutput>>,
+  c: CommandContext<
+    Record<string, never>,
+    z.output<typeof tagsOptions>,
+    z.output<typeof tagsOutput>
+  >,
 ): z.output<typeof tagsOutput> {
   const vault = openVault(c)
   const list = vault.index.sortedTags().slice(0, c.options.limit)
@@ -341,7 +345,11 @@ export const openOutput = z.object({
 
 /** Runs `monet open`. */
 export function runOpen(
-  c: CommandContext<Record<string, never>, z.output<typeof openOptions>, z.output<typeof openOutput>>,
+  c: CommandContext<
+    Record<string, never>,
+    z.output<typeof openOptions>,
+    z.output<typeof openOutput>
+  >,
 ): z.output<typeof openOutput> {
   const vault = openVault(c)
   const bundle = appBundlePath()
@@ -350,16 +358,22 @@ export function runOpen(
     return c.error({
       code: 'APP_NOT_INSTALLED',
       message:
-        'The Monet app was not found in /Applications. Open the vault folder manually, or build the app with scripts/build-app.sh.',
+        'The Monet desktop app was not found. Please install Monet or build it with pnpm --filter @monet/app package.',
       retryable: false,
     })
   }
 
   // The app reads the vault — and optionally the note — from its arguments.
-  const args = ['-a', bundle, '--args', vault.root]
-  if (c.options.note) args.push(c.options.note)
-
-  const child = spawn('open', args, { stdio: 'ignore', detached: true })
+  let child: ReturnType<typeof spawn>
+  if (process.platform === 'darwin') {
+    const args = ['-a', bundle, '--args', vault.root]
+    if (c.options.note) args.push(c.options.note)
+    child = spawn('open', args, { stdio: 'ignore', detached: true })
+  } else {
+    const args = [vault.root]
+    if (c.options.note) args.push(c.options.note)
+    child = spawn(bundle, args, { stdio: 'ignore', detached: true })
+  }
   child.unref()
 
   return { vault: vault.root, opened: true }
