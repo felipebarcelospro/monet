@@ -6,7 +6,7 @@
  * the same links and the same tags, so the tests can assert on exact values.
  *
  * Usage:
- *   bun run scripts/seed.ts [target] [--seed 42] [--notes 60]
+ *   pnpm --filter @monet/cli seed [target] [--seed 42] [--notes 60]
  */
 
 import { existsSync, mkdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
@@ -258,10 +258,11 @@ export function buildNotes(count: number, seed: number): SeedNote[] {
  */
 function repositoryRoot(): string {
   let current = resolve(dirname(fileURLToPath(import.meta.url)))
-  const root = current.split('/')[0] ?? '/'
-  while (current !== root) {
-    if (existsSync(join(current, 'Package.swift'))) return current
-    current = dirname(current)
+  while (true) {
+    if (existsSync(join(current, 'pnpm-workspace.yaml'))) return current
+    const parent = dirname(current)
+    if (parent === current) break
+    current = parent
   }
   return process.cwd()
 }
