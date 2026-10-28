@@ -29,7 +29,7 @@
     "dev": "tsx src/bin.ts",
     "seed": "tsx scripts/seed.ts",
     "build:binary": "incur build ./dist/bin.js --installer --name monet",
-    "prepack": "node scripts/copy-skill.mjs",
+    "prepack": "pnpm build && node scripts/copy-skill.mjs",
     "prebuild": "pnpm --filter @monet/core build",
     "pretypecheck": "pnpm --filter @monet/core build",
     "predev": "pnpm --filter @monet/core build"
@@ -63,5 +63,8 @@
     "cli",
     "mcp",
     "ai-agents"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -19,7 +19,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepack": "pnpm build"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
@@ -46,5 +47,8 @@
     "backlinks",
     "graph",
     "search"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
