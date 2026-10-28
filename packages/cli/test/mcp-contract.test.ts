@@ -97,7 +97,8 @@ class McpStdioClient {
 /** Starts the CLI as an MCP server over stdio. */
 function startServer(): McpStdioClient {
   const entry = fileURLToPath(new URL('../src/bin.ts', import.meta.url))
-  return new McpStdioClient('bun', ['run', entry, '--mcp'])
+  const tsx = fileURLToPath(new URL('../node_modules/tsx/dist/cli.mjs', import.meta.url))
+  return new McpStdioClient(process.execPath, [tsx, entry, '--mcp'])
 }
 
 describe('MCP contract', () => {
