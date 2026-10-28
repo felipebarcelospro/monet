@@ -24,7 +24,7 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.2"
+    "@biomejs/biome": "^2.6.3"
   },
   "license": "MIT",
   "author": "Monet contributors",
