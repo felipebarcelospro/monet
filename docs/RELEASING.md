@@ -9,12 +9,13 @@ tool names or the vault format; those are called out in the changelog.
 | Artifact | Where it comes from |
 |---|---|
 | CLI binaries (macOS, Linux, Windows, arm64 + x64) | `Binary Release` workflow on a `v*` tag |
-| Desktop app | Built locally with `pnpm package` (unsigned) |
-| `@monet/core` / `@monet/cli` on npm | Not published yet |
+| Desktop installers (DMG + ZIP for both macOS archs; NSIS, AppImage and deb once CI is unlocked) | `Desktop Release` workflow on a `v*` tag; the first macOS upload can be built locally with `pnpm --filter @monet/app package:mac` |
+| `monet-cli` on npm | Manual publish from `packages/npm` (step 7) |
+| Homebrew formula and cask | Manual update in the `homebrew-tap` repository (step 8) |
 
-The desktop app is not signed or notarised. A release page can attach the
-bundles produced on each platform, but the primary distributable for now is
-the CLI and the source.
+The desktop installers are not signed or notarised. `@monet/core` and
+`@monet/cli` are not published to npm — the npm package is a self-contained
+bundle of the CLI built in `packages/npm`.
 
 ## Checklist
 
@@ -41,8 +42,8 @@ the CLI and the source.
    pnpm release:version 0.2.0
    ```
 
-   The script edits the root, core, CLI and app manifests; it does not commit,
-   tag or publish.
+   The script edits the root, core, CLI, app and npm-shell manifests; it does
+   not commit, tag or publish.
 
 4. **Update `CHANGELOG.md`.** Move `[Unreleased]` items into a new section with
    today's date and add the compare links at the bottom.
@@ -68,17 +69,34 @@ the CLI and the source.
    git push origin v0.2.0
    ```
 
-7. **Attach the desktop bundles (optional).** On each platform:
+7. **Publish the npm package.** From `packages/npm`:
 
    ```sh
-   pnpm package
+   npm run pack:tarball
+   npm publish monet-cli-<version>.tgz
    ```
 
-   Zip `build/Monet.app` (macOS) or `build/app` (Linux/Windows) and attach it
-   to the release. Mention that it is unsigned and that macOS Gatekeeper will
-   ask for confirmation.
+   Never run `npm pack` or `npm publish` from the folder itself: npm applies
+   the repository's `.gitignore` rules over the `files` whitelist and would
+   silently drop the generated bundle and the skill template from the
+   tarball. `pack:tarball` stages the package in a temporary directory
+   outside the repository and prints the tarball path. A `prepack` guard
+   script blocks an accidental direct pack with the same explanation.
 
-8. **Announce the release.** Summarise the user-facing changes, link the
+8. **Update the Homebrew tap.** In the tap source repository
+   (`~/Documents/Fractal/homebrew-tap`), bump the `version` in
+   `Formula/monet.rb` and `Casks/monet.rb` and replace the `sha256` values
+   with the new release checksums (`SHA256SUMS` for the CLI binaries,
+   `shasum -a 256` for the DMGs). Push, then refresh the local clone and
+   re-audit:
+
+   ```sh
+   git -C /usr/local/Homebrew/Library/Taps/felipebarcelospro/homebrew-tap pull
+   brew audit --formula felipebarcelospro/tap/monet
+   brew audit --cask felipebarcelospro/tap/monet
+   ```
+
+9. **Announce the release.** Summarise the user-facing changes, link the
    release and note any migration steps for the vault, CLI or MCP tools.
 
 ## Versioning rules of thumb

@@ -24,6 +24,7 @@ const manifests = [
   'packages/core/package.json',
   'packages/cli/package.json',
   'packages/app/package.json',
+  'packages/npm/package.json',
 ]
 
 for (const manifest of manifests) {

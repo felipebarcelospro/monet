@@ -1,0 +1,43 @@
+{
+  "name": "monet-cli",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Monet — command line access to a local Monet Markdown vault.",
+  "license": "MIT",
+  "bin": {
+    "monet": "./monet.js"
+  },
+  "files": [
+    "monet.js",
+    "MonetSkill",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prepack": "node scripts/guard.mjs",
+    "pack:tarball": "node scripts/pack.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/felipebarcelospro/monet.git",
+    "directory": "packages/npm"
+  },
+  "author": "Monet contributors",
+  "homepage": "https://github.com/felipebarcelospro/monet#readme",
+  "bugs": {
+    "url": "https://github.com/felipebarcelospro/monet/issues"
+  },
+  "keywords": [
+    "markdown",
+    "notes",
+    "vault",
+    "obsidian",
+    "mcp",
+    "cli",
+    "ai-agents",
+    "pkm"
+  ]
+}
