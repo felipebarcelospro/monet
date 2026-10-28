@@ -43,8 +43,6 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'note.deleted': 'Deleted note: {path}',
     'note.updated': 'Updated note: {path}',
     'link.created': 'Linked to {target}',
-    'skill.installed': 'Installed the Monet skill for {agents}',
-    'skill.noneFound': 'No supported agents were detected.',
   },
   'pt-BR': {
     'error.vaultNotFound': 'Cofre não encontrado: {path}',
@@ -72,8 +70,6 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'note.deleted': 'Nota excluída: {path}',
     'note.updated': 'Nota atualizada: {path}',
     'link.created': 'Link criado para {target}',
-    'skill.installed': 'Skill do Monet instalada para {agents}',
-    'skill.noneFound': 'Nenhum agente compatível foi encontrado.',
   },
   es: {
     'error.vaultNotFound': 'Bóveda no encontrada: {path}',
@@ -101,8 +97,6 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'note.deleted': 'Nota eliminada: {path}',
     'note.updated': 'Nota actualizada: {path}',
     'link.created': 'Enlace creado a {target}',
-    'skill.installed': 'Skill de Monet instalada para {agents}',
-    'skill.noneFound': 'No se encontró ningún agente compatible.',
   },
 }
 

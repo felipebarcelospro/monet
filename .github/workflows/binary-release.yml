@@ -55,12 +55,6 @@ jobs:
           timeout 15s ./packages/cli/dist/binaries/monet-linux-x64-glibc-baseline --version
           timeout 15s ./packages/cli/dist/binaries/monet-linux-x64-glibc-baseline --help >/dev/null
 
-      - name: Copy the skill template next to the binaries
-        run: |
-          # The standalone binary looks for the authored skill template next
-          # to its own executable.
-          cp -R MonetSkill packages/cli/dist/binaries/
-
       - name: Publish the release
         uses: wevm/incur/release@v1
         with:

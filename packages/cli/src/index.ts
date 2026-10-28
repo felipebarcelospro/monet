@@ -1,5 +1,3 @@
-import { dirname } from 'node:path'
-
 import { Cli } from 'incur'
 
 import { backup } from './commands/backup.js'
@@ -32,7 +30,6 @@ import {
   tagsOptions,
   tagsOutput,
 } from './commands/misc.js'
-import { findSkillTemplateRoot } from './lib/skill.js'
 
 /** The `monet link` command group. */
 const link = Cli.create('link', {
@@ -54,22 +51,12 @@ const link = Cli.create('link', {
   })
 
 /**
- * The directory that holds the authored skill template.
- *
- * `monet skills add` installs the generated command skills *and* the authored
- * app skill, because the authored template is included through incur's own
- * `sync.include` mechanism. The template stays a versioned file in the
- * repository; it is never embedded in the code.
- */
-const skillRoot = findSkillTemplateRoot()
-
-/**
  * The Monet command line interface.
  *
  * Every command is declared once. From that single declaration incur
  * generates the terminal CLI, the MCP server (`--mcp` and `/mcp` over HTTP),
- * the agent manifest (`--llms`), the JSON Schema (`--schema`) and the shell
- * completions (`completions`).
+ * the agent manifest (`--llms`), the JSON Schema (`--schema`), the shell
+ * completions (`completions`) and the agent skills (`skills add`).
  */
 export const cli = Cli.create('monet', {
   version: '0.1.0',
@@ -82,17 +69,13 @@ export const cli = Cli.create('monet', {
       'Monet exposes a local Markdown vault. Use `search` to find notes, `note_show` to read one, `note_new` to create one, `link_create` to connect two notes and `graph` to inspect the link graph.',
     tools: { discovery: 'direct' },
   },
-  sync: skillRoot
-    ? {
-        cwd: dirname(skillRoot),
-        include: ['MonetSkill'],
-        suggestions: [
-          'open my Monet vault and show the graph',
-          'find the notes that link to my release plan',
-          'create a note and connect it to the project index',
-        ],
-      }
-    : undefined,
+  sync: {
+    suggestions: [
+      'open my Monet vault and show the graph',
+      'find the notes that link to my release plan',
+      'create a note and connect it to the project index',
+    ],
+  },
 })
   .command(note)
   .command(link)

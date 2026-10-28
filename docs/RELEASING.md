@@ -58,9 +58,9 @@ bundle of the CLI built in `packages/npm`.
    git push origin v0.2.0
    ```
 
-6. **Watch the `Binary Release` workflow.** It runs the checks, builds the CLI,
-   copies `MonetSkill/` next to the binaries and publishes a GitHub release
-   with the files. If it fails, fix the cause and move the tag:
+6. **Watch the `Binary Release` workflow.** It runs the checks, builds the CLI
+   binaries and publishes a GitHub release with the files. If it fails, fix
+   the cause and move the tag:
 
    ```sh
    git tag -d v0.2.0
@@ -78,10 +78,10 @@ bundle of the CLI built in `packages/npm`.
 
    Never run `npm pack` or `npm publish` from the folder itself: npm applies
    the repository's `.gitignore` rules over the `files` whitelist and would
-   silently drop the generated bundle and the skill template from the
-   tarball. `pack:tarball` stages the package in a temporary directory
-   outside the repository and prints the tarball path. A `prepack` guard
-   script blocks an accidental direct pack with the same explanation.
+   silently drop the generated bundle from the tarball. `pack:tarball` stages
+   the package in a temporary directory outside the repository and prints the
+   tarball path. A `prepack` guard script blocks an accidental direct pack
+   with the same explanation.
 
 8. **Update the Homebrew tap.** In the tap source repository
    (`~/Documents/Fractal/homebrew-tap`), bump the `version` in
@@ -121,4 +121,5 @@ Release notes are for users, not for git history. Include:
 - Close the milestone.
 - Move remaining `[Unreleased]` items to the next milestone.
 - If the CLI changed, run `monet skills add` so installed agent skills match
-  the new command list.
+  the new command list (the skills are generated from the command
+  declarations; there is nothing else to update by hand).

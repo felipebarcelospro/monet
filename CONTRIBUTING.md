@@ -96,11 +96,10 @@ Run `pnpm check` before opening a pull request. CI runs the same commands.
 
 ```
 packages/core/        engine: no Electron, no React, no disk UI
-packages/cli/         command declarations, MCP server, skill template
+packages/cli/         command declarations, MCP server, skills generation
 packages/app/         Electron main, preload, React renderer
 Fixtures/vault/       shared CLI/app test vault
 ExampleVault/         generated demo vault, ignored by git
-MonetSkill/           authored agent skill (en, pt-BR, es)
 docs/screenshots/     images used by the README
 ```
 
@@ -128,8 +127,9 @@ vault service.
 
    - `README.md` for user-facing features and commands.
    - `ARCHITECTURE.md` for data flow or contracts.
-   - `MonetSkill/SKILL.md` (and the `pt-BR` / `es` versions) when an agent
-     workflow changes.
+   - The command declarations in `packages/cli/src/commands/` when an agent
+     workflow changes — agent skills are generated from those declarations by
+     Incur; there is no separate skill file to update.
 
 5. Run `pnpm check`.
 
@@ -168,8 +168,8 @@ The scope is the package or area: `app`, `editor`, `cli`, `core`, `docs`,
 - Add output schemas and a test in `packages/cli/test/cli.test.ts`.
 - Run the CLI with `--format json` and `--help`; both are part of the public
   contract.
-- If the command changes how agents should work, update `MonetSkill/` in all
-  three languages.
+- If the command changes how agents should work, update the command
+  declaration and its descriptions — the agent skills follow.
 
 ### A new string
 

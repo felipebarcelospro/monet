@@ -17,8 +17,7 @@
     }
   },
   "files": [
-    "dist",
-    "MonetSkill"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -29,7 +28,7 @@
     "dev": "tsx src/bin.ts",
     "seed": "tsx scripts/seed.ts",
     "build:binary": "incur build ./dist/bin.js --installer --name monet",
-    "prepack": "pnpm build && node scripts/copy-skill.mjs",
+    "prepack": "pnpm build",
     "prebuild": "pnpm --filter @monet/core build",
     "pretypecheck": "pnpm --filter @monet/core build",
     "predev": "pnpm --filter @monet/core build"

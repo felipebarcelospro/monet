@@ -1,4 +1,4 @@
-import { chmodSync, copyFileSync, cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -10,14 +10,13 @@ import { fileURLToPath } from 'node:url'
  * The workspace package (`@monet/cli`) is compiled with `tsc` and imports
  * `@monet/core` at runtime, which only resolves inside the monorepo, so the
  * published package must stand alone: the CLI entry point and every workspace
- * dependency are bundled into one file that plain Node executes, and the agent
- * skill template is copied next to it.
+ * dependency are bundled into one file that plain Node executes.
  *
- * The bundle, the template and the manifest are staged in a temporary
- * directory OUTSIDE the repository and `npm pack` runs from there. When
- * packing from a directory inside the repository, npm applies .gitignore
- * rules over the `files` whitelist — even with a .npmignore present — which
- * silently dropped the generated files from the tarball.
+ * The bundle and the manifest are staged in a temporary directory OUTSIDE the
+ * repository and `npm pack` runs from there. When packing from a directory
+ * inside the repository, npm applies .gitignore rules over the `files`
+ * whitelist — even with a .npmignore present — which silently dropped the
+ * generated files from the tarball.
  */
 
 const pkg = fileURLToPath(new URL('..', import.meta.url))
@@ -39,7 +38,6 @@ if (!source.startsWith('#!')) source = `#!/usr/bin/env node\n${source}`
 writeFileSync(join(stage, 'monet.js'), source)
 chmodSync(join(stage, 'monet.js'), 0o755)
 
-cpSync(join(repo, 'MonetSkill'), join(stage, 'MonetSkill'), { recursive: true })
 copyFileSync(join(repo, 'LICENSE'), join(stage, 'LICENSE'))
 copyFileSync(join(pkg, 'README.md'), join(stage, 'README.md'))
 
