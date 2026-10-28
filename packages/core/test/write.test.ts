@@ -33,6 +33,10 @@ description: |
 summary: >-
   Folded text that becomes
   one paragraph.
+items:
+  - |
+    Item one.
+    Item two.
 ---
 Body.`
 
@@ -41,6 +45,11 @@ Body.`
     expect(stringValue(parsed.frontmatter['summary']!)).toBe(
       'Folded text that becomes one paragraph.',
     )
+    const items = parsed.frontmatter['items']
+    expect(items?.kind).toBe('array')
+    if (items?.kind === 'array') {
+      expect(stringValue(items.value[0]!)).toBe('Item one.\nItem two.\n')
+    }
 
     const rendered = renderNote({ frontmatter: parsed.frontmatter }, parsed.body)
     const roundtripped = parseMarkdown(rendered)
@@ -51,6 +60,10 @@ Body.`
     expect(stringValue(roundtripped.frontmatter['summary']!)).toBe(
       'Folded text that becomes one paragraph.',
     )
+    const roundtrippedItems = roundtripped.frontmatter['items']
+    if (roundtrippedItems?.kind === 'array') {
+      expect(stringValue(roundtrippedItems.value[0]!)).toBe('Item one.\nItem two.\n')
+    }
     expect(roundtripped.body).toBe('Body.')
   })
 

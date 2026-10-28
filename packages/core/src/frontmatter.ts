@@ -277,16 +277,18 @@ function expandBlockScalars(lines: string[]): string[] {
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!
-    const match = /^(\s*)([^#][^:]*?):\s*([|>])([+-]?)\s*(?:#.*)?$/u.exec(line)
+    const keyMatch = /^(\s*)([^#][^:]*?):\s*([|>])([+-]?)\s*(?:#.*)?$/u.exec(line)
+    const itemMatch = /^(\s*)-\s*([|>])([+-]?)\s*(?:#.*)?$/u.exec(line)
+    const match = keyMatch ?? itemMatch
     if (!match) {
       output.push(line)
       continue
     }
 
     const indent = (match[1] ?? '').length
-    const key = (match[2] ?? '').trim()
-    const style = match[3] ?? '|'
-    const chomping = match[4] ?? ''
+    const key = keyMatch ? (match[2] ?? '').trim() : undefined
+    const style = (keyMatch ? match[3] : match[2]) ?? '|'
+    const chomping = (keyMatch ? match[4] : match[3]) ?? ''
 
     const block: string[] = []
     let cursor = index + 1
@@ -320,7 +322,8 @@ function expandBlockScalars(lines: string[]): string[] {
       if (value.length > 0) value += '\n'
     }
 
-    output.push(`${match[1] ?? ''}${key}: ${JSON.stringify(value)}`)
+    const prefix = keyMatch ? `${match[1] ?? ''}${key}: ` : `${match[1] ?? ''}- `
+    output.push(`${prefix}${JSON.stringify(value)}`)
     index = cursor - 1
   }
 
