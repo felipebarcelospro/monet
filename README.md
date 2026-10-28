@@ -107,7 +107,22 @@ pnpm package
 The bundle is unsigned. On macOS, Gatekeeper asks for confirmation the first
 time you open it.
 
-### Use the CLI from anywhere
+### Install the CLI
+
+```sh
+curl -fsSL https://github.com/felipebarcelospro/monet/releases/latest/download/install.sh | sh
+```
+
+Windows (PowerShell):
+
+```powershell
+irm https://github.com/felipebarcelospro/monet/releases/latest/download/install.ps1 | iex
+```
+
+Prebuilt binaries for macOS, Linux and Windows are attached to each release;
+the installer verifies the SHA-256 checksum before use.
+
+To run from source instead:
 
 ```sh
 pnpm --filter @monet/cli build
@@ -116,10 +131,6 @@ cd packages/cli && pnpm link --global
 monet vault current
 monet note list
 ```
-
-Prebuilt CLI binaries for macOS, Linux and Windows are published on the
-[releases page](https://github.com/felipebarcelospro/monet/releases) when a `v*` tag
-is pushed.
 
 ---
 
