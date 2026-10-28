@@ -2,7 +2,7 @@
   "name": "@monet-ai/cli",
   "version": "0.1.0",
   "type": "module",
-  "description": "Monet — command line access to a local Monet Markdown vault.",
+  "description": "Monet — the CLI and MCP server for a local-first Markdown vault. One brain for you and your agents.",
   "license": "MIT",
   "bin": {
     "monet": "./monet.js"

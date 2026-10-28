@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "private": false,
-  "description": "Monet — command line access to a Monet Markdown vault.",
+  "description": "Monet — the CLI and MCP server for your local Markdown vault.",
   "license": "MIT",
   "bin": {
     "monet": "./dist/bin.js"

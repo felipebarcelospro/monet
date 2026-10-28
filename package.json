@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Monet — a local-first cross-platform Markdown vault with an interactive link graph, CLI and MCP server.",
+  "description": "Monet — one brain for you and your agents. A local-first Markdown vault with a desktop app, a CLI and an MCP server.",
   "packageManager": "pnpm@11.16.0",
   "scripts": {
     "dev": "pnpm --filter @monet/app dev",

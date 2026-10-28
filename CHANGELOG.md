@@ -10,6 +10,20 @@ All notable changes to Monet are documented here. The format follows
 
 - Issue and pull request templates, Dependabot, CodeQL and a release guide.
 - `ARCHITECTURE.md`, `CONTRIBUTING.md`, `SECURITY.md` and this changelog.
+- `AGENTS.md` and `docs/POSITIONING.md`: the product thesis — one brain for
+  you and your agents — and the rules that keep copy and code aligned with
+  it.
+
+### Changed
+
+- **Removed the authored agent skill template.** `monet skills add` now
+  installs only skills generated from the command declarations, so the
+  guidance agents receive always matches the tool. There is no separate
+  skill file to author or keep in sync.
+- The README leads with the shared-second-brain thesis and is organised
+  around "for you" (the desktop app) and "for your agents" (CLI and MCP).
+- Package descriptions, the npm package README and the Homebrew tap
+  descriptions follow the same positioning.
 
 ## [0.1.0] — 2026-10-28
 
