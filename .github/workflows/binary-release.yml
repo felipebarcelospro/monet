@@ -48,6 +48,13 @@ jobs:
       - name: Build the standalone binaries
         run: pnpm --filter @monet/cli build:binary
 
+      - name: Smoke test the host binary
+        run: |
+          # A compiled binary can fail before it prints anything. Run the
+          # Linux build on the Linux runner so a broken release never ships.
+          timeout 15s ./packages/cli/dist/binaries/monet-linux-x64-glibc-baseline --version
+          timeout 15s ./packages/cli/dist/binaries/monet-linux-x64-glibc-baseline --help >/dev/null
+
       - name: Copy the skill template next to the binaries
         run: |
           # The standalone binary looks for the authored skill template next

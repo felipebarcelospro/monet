@@ -18,10 +18,11 @@ export function packageRoot(): string | undefined {
   }
 
   let current = resolve(directory)
-  const root = current.split('/')[0] ?? '/'
-  while (current !== root) {
+  while (true) {
     if (existsSync(join(current, 'package.json'))) return current
-    current = dirname(current)
+    const parent = dirname(current)
+    if (parent === current) break
+    current = parent
   }
   return undefined
 }
