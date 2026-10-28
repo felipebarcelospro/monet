@@ -236,7 +236,10 @@ export class VaultService {
     const note = this.requireNote(id)
     const absolute = this.requireVault().absolutePath(note.relativePath)
 
-    if (expectedRevision && existsSync(absolute)) {
+    if (expectedRevision) {
+      if (!existsSync(absolute)) {
+        throw new Error('NOTE_CONFLICT: this note was removed on disk')
+      }
       const current = revisionOf(readFileSync(absolute, 'utf8'))
       if (current !== expectedRevision) {
         throw new Error('NOTE_CONFLICT: this note changed on disk')
@@ -384,7 +387,10 @@ export class VaultService {
     const note = this.requireNote(id)
     const absolute = this.requireVault().absolutePath(note.relativePath)
 
-    if (expectedRevision && existsSync(absolute)) {
+    if (expectedRevision) {
+      if (!existsSync(absolute)) {
+        throw new Error('NOTE_CONFLICT: this note was removed on disk')
+      }
       const current = revisionOf(readFileSync(absolute, 'utf8'))
       if (current !== expectedRevision) {
         throw new Error('NOTE_CONFLICT: this note changed on disk')

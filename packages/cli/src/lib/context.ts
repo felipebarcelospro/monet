@@ -108,7 +108,8 @@ export function writeNote(vault: Vault, note: Note, body: string): void {
 
   // Refuse to overwrite a file that changed after this command read it. A
   // newly created note has no revision yet and is written unconditionally.
-  if (note.revision.length > 0 && existsSync(absolute)) {
+  if (note.revision.length > 0) {
+    if (!existsSync(absolute)) throw new NoteConflictError(note.relativePath)
     const current = revisionOf(readFileSync(absolute, 'utf8'))
     if (current !== note.revision) throw new NoteConflictError(note.relativePath)
   }
