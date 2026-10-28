@@ -12,6 +12,32 @@ Monet stores notes as plain `.md` files in a folder you own. Links are
 relative to the vault, and the same folder is available to the desktop app,
 the command line and AI agents — with no proprietary database in between.
 
+## Install the CLI
+
+**macOS and Linux:**
+
+```sh
+curl -fsSL https://github.com/felipebarcelospro/monet/releases/latest/download/install.sh | sh
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://github.com/felipebarcelospro/monet/releases/latest/download/install.ps1 | iex
+```
+
+The installer picks the right build for your system, verifies the SHA-256
+checksum and installs to `~/.local/bin` — no Node.js needed. Set
+`MONET_INSTALL_DIR` to install somewhere else.
+
+Then point it at your notes:
+
+```sh
+monet vault use ~/Documents/Vault
+monet vault current
+monet note list
+```
+
 ![The Monet editor](docs/screenshots/editor.png)
 
 ---
@@ -21,7 +47,8 @@ the command line and AI agents — with no proprietary database in between.
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Requirements](#requirements)
-- [Quick start](#quick-start)
+- [Install](#install-the-cli)
+- [Build from source](#build-from-source)
 - [Monorepo structure](#monorepo-structure)
 - [The vault format](#the-vault-format)
 - [Markdown support](#markdown-support)
@@ -79,7 +106,7 @@ same Electron, Vite and Node code paths.
 
 ---
 
-## Quick start
+## Build from source
 
 ```sh
 # 1. Install the workspace.
@@ -107,22 +134,7 @@ pnpm package
 The bundle is unsigned. On macOS, Gatekeeper asks for confirmation the first
 time you open it.
 
-### Install the CLI
-
-```sh
-curl -fsSL https://github.com/felipebarcelospro/monet/releases/latest/download/install.sh | sh
-```
-
-Windows (PowerShell):
-
-```powershell
-irm https://github.com/felipebarcelospro/monet/releases/latest/download/install.ps1 | iex
-```
-
-Prebuilt binaries for macOS, Linux and Windows are attached to each release;
-the installer verifies the SHA-256 checksum before use.
-
-To run from source instead:
+### Run from source
 
 ```sh
 pnpm --filter @monet/cli build
