@@ -6,5 +6,5 @@
 console.error('Pack from a staging directory outside the repository instead:')
 console.error('')
 console.error('  npm run pack')
-console.error('  npm publish monet-cli-<version>.tgz')
+console.error('  npm publish monet-ai-cli-<version>.tgz')
 process.exit(1)

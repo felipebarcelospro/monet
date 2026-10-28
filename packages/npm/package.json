@@ -1,5 +1,5 @@
 {
-  "name": "monet-cli",
+  "name": "@monet-ai/cli",
   "version": "0.1.0",
   "type": "module",
   "description": "Monet — command line access to a local Monet Markdown vault.",
@@ -39,5 +39,8 @@
     "cli",
     "ai-agents",
     "pkm"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -73,7 +73,7 @@ bundle of the CLI built in `packages/npm`.
 
    ```sh
    npm run pack:tarball
-   npm publish monet-cli-<version>.tgz
+   npm publish monet-ai-cli-<version>.tgz
    ```
 
    Never run `npm pack` or `npm publish` from the folder itself: npm applies

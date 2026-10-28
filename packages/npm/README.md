@@ -3,7 +3,7 @@
 Command line access to a local [Monet](https://github.com/felipebarcelospro/monet) Markdown vault.
 
 ```sh
-npm install -g monet-cli
+npm install -g @monet-ai/cli
 monet vault use ~/Documents/Vault
 monet note list
 ```
