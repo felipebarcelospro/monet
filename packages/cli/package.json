@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@monet/core": "workspace:*",
-    "incur": "^0.7.1"
+    "incur": "^0.9.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
